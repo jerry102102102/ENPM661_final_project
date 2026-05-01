@@ -78,16 +78,6 @@ How did we build or plan the code?
 
 put it under `implementation_process/`.
 
-## Local Notes Not Pushed to Main
-
-Chinese drafts and local explanation notes are kept under:
-
-```text
-doc/local_zh_notes/
-```
-
-That folder is ignored by git and should not be pushed to `main`.
-
 ## Demo Video
 
 To render a short 2D demo video:
