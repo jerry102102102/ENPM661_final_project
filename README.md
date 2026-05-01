@@ -30,8 +30,9 @@ For writing the final report, read:
 1. `doc/paper_content/actea_evaluation_report_polished.md`
 2. `doc/paper_content/relation_to_prior_work_and_our_extensions.md`
 3. `doc/paper_content/phase3_cached_temporal_roadmap.md`
-4. `doc/paper_content/actea_evaluation_report.md`
-5. `doc/paper_content/t_prm_paper_notes_and_implementation_plan.md`
+4. `doc/paper_content/method_math_and_algorithm_notes.md`
+5. `doc/paper_content/actea_evaluation_report.md`
+6. `doc/paper_content/t_prm_paper_notes_and_implementation_plan.md`
 
 Implementation process notes are separated under:
 
