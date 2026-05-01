@@ -13,6 +13,11 @@ from src.models.roadmap import RoadmapEdge
 from src.models.state import Pose2D, TrajectorySegment
 
 
+Interval = tuple[float, float]
+ObstacleSignature = tuple[tuple[str, float, float, float, float, float], ...]
+EPS = 1e-12
+
+
 @dataclass(frozen=True)
 class AxisAlignedBounds:
     """2D axis-aligned bounds."""
@@ -49,6 +54,62 @@ class TemporalValidityInterval:
     valid: bool
 
 
+@dataclass(frozen=True)
+class EdgeTemporalAnnotation:
+    """First-class ACTEA metadata for one roadmap edge and obstacle scenario."""
+
+    edge_id: int
+    obstacle_signature: ObstacleSignature
+    blocked_intervals_exact: list[Interval]
+    valid_intervals_exact: list[Interval]
+    temporal_horizon_s: tuple[float, float]
+    temporal_annotation_mode: str
+    blocked_intervals_by_obstacle: dict[str, list[Interval]] | None = None
+
+    def status_at(self, departure_time_s: float) -> bool | None:
+        """Return edge validity at departure time, or None outside the annotated horizon."""
+
+        horizon_start, horizon_end = self.temporal_horizon_s
+        if departure_time_s < horizon_start - EPS or departure_time_s > horizon_end + EPS:
+            return None
+        for start, end in self.blocked_intervals_exact:
+            if start <= departure_time_s <= end:
+                return False
+        for start, end in self.valid_intervals_exact:
+            if start <= departure_time_s <= end:
+                return True
+        return None
+
+    def to_validity_intervals(self) -> list[TemporalValidityInterval]:
+        """Return legacy interval objects used by the existing cache lookup path."""
+
+        intervals = [
+            *(TemporalValidityInterval(self.edge_id, start, end, False) for start, end in self.blocked_intervals_exact),
+            *(TemporalValidityInterval(self.edge_id, start, end, True) for start, end in self.valid_intervals_exact),
+        ]
+        intervals.sort(key=lambda item: (item.start_time_s, item.valid, item.end_time_s))
+        return intervals
+
+
+@dataclass
+class EdgeTemporalAnnotationStore:
+    """Parallel edge-annotation table keyed by edge id and dynamic-obstacle scenario."""
+
+    annotations: dict[tuple[int, ObstacleSignature], EdgeTemporalAnnotation] = field(default_factory=dict)
+
+    def set(self, annotation: EdgeTemporalAnnotation) -> None:
+        self.annotations[(annotation.edge_id, annotation.obstacle_signature)] = annotation
+
+    def get_by_signature(self, edge_id: int, signature: ObstacleSignature) -> EdgeTemporalAnnotation | None:
+        return self.annotations.get((edge_id, signature))
+
+    def get(self, edge_id: int, dynamic_obstacles: list[DynamicCircleObstacle]) -> EdgeTemporalAnnotation | None:
+        return self.get_by_signature(edge_id, obstacle_signature(dynamic_obstacles))
+
+    def __len__(self) -> int:
+        return len(self.annotations)
+
+
 @dataclass
 class TemporalValidationStats:
     """Cache and validation counters for one or more queries."""
@@ -77,10 +138,6 @@ class TemporalValidationStats:
             "interaction_cache_hits": self.interaction_cache_hits,
             "analytic_interval_annotations": self.analytic_interval_annotations,
         }
-
-
-Interval = tuple[float, float]
-EPS = 1e-12
 
 
 def trajectory_bounds(trajectory: TrajectorySegment) -> AxisAlignedBounds:
@@ -411,7 +468,7 @@ def candidate_dynamic_obstacles_for_edge(
 
 @dataclass
 class CachedTemporalValidator:
-    """Edge-obstacle filtering, time-bin cache, and analytic interval metadata."""
+    """Edge-obstacle filtering, time-bin cache, and ACTEA metadata."""
 
     static_world: StaticWorld
     collision: CollisionParams
@@ -421,6 +478,7 @@ class CachedTemporalValidator:
     timestamp_mode: str = "normalized"
     use_interval_lookup: bool = True
     stats: TemporalValidationStats = field(default_factory=TemporalValidationStats)
+    annotation_store: EdgeTemporalAnnotationStore = field(default_factory=EdgeTemporalAnnotationStore)
     bin_cache: dict[tuple[int, int, tuple[tuple[str, float, float, float, float, float], ...]], bool] = field(
         default_factory=dict
     )
@@ -485,6 +543,15 @@ class CachedTemporalValidator:
     ) -> bool | None:
         if not self.use_interval_lookup:
             return None
+        annotation = self.annotation_store.get(edge_id, dynamic_obstacles)
+        if annotation is not None:
+            status = annotation.status_at(departure_time_s)
+            if status is not None:
+                if status:
+                    self.stats.interval_cache_hits_free += 1
+                else:
+                    self.stats.interval_cache_hits_blocked += 1
+                return status
         intervals = self.interval_cache.get(self._interval_key(edge_id, dynamic_obstacles))
         if not intervals:
             return None
@@ -555,6 +622,28 @@ class CachedTemporalValidator:
         self.bin_cache[cache_key] = valid
         return valid
 
+    def edge_is_valid_at_time(
+        self,
+        edge: RoadmapEdge,
+        departure_time_s: float,
+        dynamic_obstacles: list[DynamicCircleObstacle],
+    ) -> bool:
+        """Return whether an edge is valid when departed at a given time."""
+
+        return self.validate_edge(edge, departure_time_s, dynamic_obstacles)
+
+    def edge_cost_at_time(
+        self,
+        edge: RoadmapEdge,
+        departure_time_s: float,
+        dynamic_obstacles: list[DynamicCircleObstacle],
+    ) -> float:
+        """Return geometric edge cost at valid times and infinity when blocked."""
+
+        if not self.edge_is_valid_at_time(edge, departure_time_s, dynamic_obstacles):
+            return math.inf
+        return edge.geometric_cost
+
     def annotate_edge_intervals(
         self,
         edge: RoadmapEdge,
@@ -570,25 +659,53 @@ class CachedTemporalValidator:
         the analytic solver.
         """
 
-        _ = step_s
-        blocked = edge_blocked_departure_intervals(
+        annotation = self.annotate_edge_temporal_annotation(
             edge,
             dynamic_obstacles,
-            self.collision,
-            self.clearance,
-            start_time_s,
-            end_time_s,
+            start_time_s=start_time_s,
+            end_time_s=end_time_s,
+            step_s=step_s,
         )
-        valid = complement_intervals(blocked, start_time_s, end_time_s)
-        intervals = [
-            *(TemporalValidityInterval(edge.edge_id, start, end, False) for start, end in blocked),
-            *(TemporalValidityInterval(edge.edge_id, start, end, True) for start, end in valid),
-        ]
-        intervals.sort(key=lambda item: (item.start_time_s, item.valid, item.end_time_s))
-        self.stats.analytic_interval_annotations += 1
+        return annotation.to_validity_intervals()
 
-        self.interval_cache[self._interval_key(edge.edge_id, dynamic_obstacles)] = intervals
-        return intervals
+    def annotate_edge_temporal_annotation(
+        self,
+        edge: RoadmapEdge,
+        dynamic_obstacles: list[DynamicCircleObstacle],
+        *,
+        start_time_s: float,
+        end_time_s: float,
+        step_s: float | None = None,
+    ) -> EdgeTemporalAnnotation:
+        """Compute and store first-class ACTEA edge temporal annotation."""
+
+        _ = step_s
+        blocked_by_obstacle: dict[str, list[Interval]] = {}
+        for index, obstacle in enumerate(dynamic_obstacles):
+            obstacle_key = f"{index}:{obstacle.label}"
+            blocked_by_obstacle[obstacle_key] = edge_obstacle_blocked_departure_intervals(
+                edge,
+                obstacle,
+                self.collision,
+                self.clearance,
+                start_time_s,
+                end_time_s,
+            )
+        blocked = merge_intervals([interval for intervals in blocked_by_obstacle.values() for interval in intervals])
+        valid = complement_intervals(blocked, start_time_s, end_time_s)
+        annotation = EdgeTemporalAnnotation(
+            edge_id=edge.edge_id,
+            obstacle_signature=obstacle_signature(dynamic_obstacles),
+            blocked_intervals_exact=blocked,
+            valid_intervals_exact=valid,
+            temporal_horizon_s=(start_time_s, end_time_s),
+            temporal_annotation_mode="actea",
+            blocked_intervals_by_obstacle=blocked_by_obstacle,
+        )
+        self.stats.analytic_interval_annotations += 1
+        self.annotation_store.set(annotation)
+        self.interval_cache[self._interval_key(edge.edge_id, dynamic_obstacles)] = annotation.to_validity_intervals()
+        return annotation
 
 
 def pose_list_bounds(poses: list[Pose2D]) -> AxisAlignedBounds:

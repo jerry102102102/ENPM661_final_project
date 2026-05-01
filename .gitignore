@@ -209,6 +209,8 @@ tempCodeRunnerFile.py
 # Local planner/debug outputs
 outputs/
 *:Zone.Identifier
+.DS_Store
+doc/local_zh_notes/
 
 # PyPI configuration file
 .pypirc

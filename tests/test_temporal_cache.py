@@ -75,6 +75,34 @@ class TemporalCacheTests(unittest.TestCase):
         self.assertEqual(validator.stats.exact_checks, 0)
         self.assertGreaterEqual(validator.stats.analytic_interval_annotations, 1)
 
+    def test_actea_annotation_is_first_class_edge_metadata(self) -> None:
+        edge = _edge()
+        validator = CachedTemporalValidator(
+            static_world=StaticWorld(bounds=(-1.0, 2.0, -1.0, 1.0), obstacles=[]),
+            collision=CollisionParams(radius_m=0.05, source="test"),
+            clearance=0.0,
+            time_bin_size_s=0.5,
+            use_interval_lookup=True,
+        )
+        obstacle = DynamicCircleObstacle(0.5, 0.0, 0.0, 0.0, 0.1, "blocker")
+
+        annotation = validator.annotate_edge_temporal_annotation(
+            edge,
+            [obstacle],
+            start_time_s=0.0,
+            end_time_s=1.0,
+        )
+
+        self.assertEqual(annotation.edge_id, edge.edge_id)
+        self.assertEqual(annotation.temporal_annotation_mode, "actea")
+        self.assertEqual(annotation.temporal_horizon_s, (0.0, 1.0))
+        self.assertGreaterEqual(len(annotation.blocked_intervals_exact), 1)
+        self.assertGreaterEqual(len(annotation.valid_intervals_exact), 0)
+        self.assertIn("0:blocker", annotation.blocked_intervals_by_obstacle or {})
+        self.assertIs(validator.annotation_store.get(edge.edge_id, [obstacle]), annotation)
+        self.assertFalse(validator.edge_is_valid_at_time(edge, 0.0, [obstacle]))
+        self.assertTrue(validator.edge_cost_at_time(edge, 0.0, [obstacle]) == float("inf"))
+
     def test_analytic_edge_intervals_match_crossing_obstacle(self) -> None:
         edge = _edge()
         collision = CollisionParams(radius_m=0.05, source="test")

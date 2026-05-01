@@ -11,7 +11,12 @@ from src.core.angles import normalize_angle
 from src.core.costs import euclidean_distance_xy
 from src.core.rollout import simulate_primitive
 from src.core.static_collision import is_pose_static_valid, is_trajectory_static_valid
-from src.core.temporal_cache import CachedTemporalValidator, TemporalValidationStats
+from src.core.temporal_cache import (
+    CachedTemporalValidator,
+    EdgeTemporalAnnotation,
+    EdgeTemporalAnnotationStore,
+    TemporalValidationStats,
+)
 from src.core.temporal_validation import temporal_collision_free
 from src.models.labels import TemporalSearchLabel
 from src.models.obstacles import DynamicCircleObstacle, StaticWorld
@@ -32,9 +37,41 @@ class TemporalRoadmapPlannerConfig:
     connection_heading_tolerance_rad: float = math.radians(35.0)
     timestamp_mode: str = "normalized"
     max_expanded_labels: int = 20000
+    temporal_annotation_mode: str | None = None
     use_temporal_cache: bool = False
     use_temporal_intervals: bool = False
     cache_time_slack_s: float = 0.0
+    heuristic_mode: str = "euclidean"
+    heuristic_heading_weight: float = 0.15
+    heuristic_time_weight: float = 0.10
+
+    def __post_init__(self) -> None:
+        if self.temporal_annotation_mode is None:
+            if self.use_temporal_intervals:
+                mode = "actea"
+            elif self.use_temporal_cache:
+                mode = "bin_cache"
+            else:
+                mode = "online"
+        else:
+            mode = self._normalize_temporal_annotation_mode(self.temporal_annotation_mode)
+        if mode not in {"online", "bin_cache", "actea"}:
+            raise ValueError(f"Unknown temporal_annotation_mode: {mode}")
+        if self.heuristic_mode not in {"euclidean", "goal_distance_heading_time_lb"}:
+            raise ValueError(f"Unknown heuristic_mode: {self.heuristic_mode}")
+        object.__setattr__(self, "temporal_annotation_mode", mode)
+        object.__setattr__(self, "use_temporal_cache", mode in {"bin_cache", "actea"})
+        object.__setattr__(self, "use_temporal_intervals", mode == "actea")
+
+    @staticmethod
+    def _normalize_temporal_annotation_mode(mode: str) -> str:
+        aliases = {
+            "online_only": "online",
+            "sampled_cache": "bin_cache",
+            "exact3c": "actea",
+            "interval_cache": "actea",
+        }
+        return aliases.get(mode, mode)
 
 
 @dataclass(frozen=True)
@@ -90,6 +127,7 @@ class TemporalRoadmapPlanner:
         self.planner_config = planner_config
         self.config = config or TemporalRoadmapPlannerConfig()
         self.cached_validator: CachedTemporalValidator | None = None
+        self.temporal_annotation_store = EdgeTemporalAnnotationStore()
 
     def _make_cached_validator(self, clearance: float) -> CachedTemporalValidator:
         if (
@@ -106,8 +144,10 @@ class TemporalRoadmapPlanner:
                 max_time_slack_s=self.config.cache_time_slack_s,
                 timestamp_mode=self.config.timestamp_mode,
                 use_interval_lookup=self.config.use_temporal_intervals,
+                annotation_store=self.temporal_annotation_store,
             )
         self.cached_validator.use_interval_lookup = self.config.use_temporal_intervals
+        self.cached_validator.annotation_store = self.temporal_annotation_store
         return self.cached_validator
 
     def annotate_temporal_intervals(
@@ -119,8 +159,8 @@ class TemporalRoadmapPlanner:
         step_s: float | None = None,
         clearance: float = 0.0,
         max_edges: int | None = None,
-    ) -> dict[int, object]:
-        """Precompute sampled temporal validity intervals for roadmap edges."""
+    ) -> dict[int, EdgeTemporalAnnotation]:
+        """Precompute first-class ACTEA temporal annotations for roadmap edges."""
 
         validator = self._make_cached_validator(clearance)
         interval_end = self.config.max_arrival_time_s if end_time_s is None else end_time_s
@@ -128,7 +168,7 @@ class TemporalRoadmapPlanner:
         if max_edges is not None:
             edge_items = edge_items[:max_edges]
         return {
-            edge_id: validator.annotate_edge_intervals(
+            edge_id: validator.annotate_edge_temporal_annotation(
                 edge,
                 dynamic_obstacles,
                 start_time_s=start_time_s,
@@ -268,6 +308,66 @@ class TemporalRoadmapPlanner:
             return False
         return self._heading_error(pose.theta, goal_pose.theta) <= self.config.goal_heading_tolerance_rad
 
+    def _max_primitive_speed_mps(self) -> float:
+        speeds = [max(abs(primitive.command_a), abs(primitive.command_b)) * 2.0 * math.pi / 60.0 * self.vehicle_params.wheel_radius_m for primitive in self.primitives]
+        return max(max(speeds, default=0.0), 1e-6)
+
+    def _heuristic(self, pose: Pose2D, goal_pose: Pose2D) -> float:
+        distance = euclidean_distance_xy(pose, goal_pose)
+        if self.config.heuristic_mode == "euclidean":
+            return distance
+        heading_error = self._heading_error(pose.theta, goal_pose.theta)
+        optimistic_time_lb = distance / self._max_primitive_speed_mps()
+        return (
+            distance
+            + self.config.heuristic_heading_weight * heading_error
+            + self.config.heuristic_time_weight * optimistic_time_lb
+        )
+
+    def edge_is_valid_at_time(
+        self,
+        edge: RoadmapEdge,
+        departure_time_s: float,
+        dynamic_obstacles: list[DynamicCircleObstacle],
+        *,
+        clearance: float = 0.0,
+        validator: CachedTemporalValidator | None = None,
+    ) -> bool:
+        """Return whether a roadmap edge can be traversed from a departure time."""
+
+        if validator is not None:
+            return validator.edge_is_valid_at_time(edge, departure_time_s, dynamic_obstacles)
+        return temporal_collision_free(
+            edge.trajectory,
+            departure_time_s,
+            self.static_world,
+            dynamic_obstacles,
+            self.collision,
+            clearance=clearance,
+            timestamp_mode=self.config.timestamp_mode,
+        )
+
+    def edge_cost_at_time(
+        self,
+        edge: RoadmapEdge,
+        departure_time_s: float,
+        dynamic_obstacles: list[DynamicCircleObstacle],
+        *,
+        clearance: float = 0.0,
+        validator: CachedTemporalValidator | None = None,
+    ) -> float:
+        """Return geometric edge cost at valid departure times and infinity when blocked."""
+
+        if not self.edge_is_valid_at_time(
+            edge,
+            departure_time_s,
+            dynamic_obstacles,
+            clearance=clearance,
+            validator=validator,
+        ):
+            return math.inf
+        return edge.geometric_cost
+
     def _prepare_query_graph(
         self,
         start_pose: Pose2D,
@@ -374,7 +474,7 @@ class TemporalRoadmapPlanner:
         best_cost: dict[tuple[int, int], float] = {
             (start_node_id, self._time_bin(start_time_s)): 0.0,
         }
-        start_h = euclidean_distance_xy(start_pose, goal_pose)
+        start_h = self._heuristic(start_pose, goal_pose)
         heapq.heappush(open_heap, (start_h, start_h, 0, 0))
 
         expanded_labels = 0
@@ -417,23 +517,18 @@ class TemporalRoadmapPlanner:
                 arrival_time = label.arrival_time + edge.duration_s
                 if arrival_time > self.config.max_arrival_time_s:
                     continue
-                if validator is not None:
-                    edge_is_temporally_valid = validator.validate_edge(edge, label.arrival_time, dynamic_obstacles)
-                else:
-                    edge_is_temporally_valid = temporal_collision_free(
-                        edge.trajectory,
-                        label.arrival_time,
-                        self.static_world,
-                        dynamic_obstacles,
-                        self.collision,
-                        clearance=clearance,
-                        timestamp_mode=self.config.timestamp_mode,
-                    )
-                if not edge_is_temporally_valid:
+                edge_time_cost = self.edge_cost_at_time(
+                    edge,
+                    label.arrival_time,
+                    dynamic_obstacles,
+                    clearance=clearance,
+                    validator=validator,
+                )
+                if not math.isfinite(edge_time_cost):
                     rejected_dynamic_edges += 1
                     continue
 
-                child_cost = label.cost_to_come + edge.geometric_cost
+                child_cost = label.cost_to_come + edge_time_cost
                 child_key = (edge.target_id, self._time_bin(arrival_time))
                 if child_cost >= best_cost.get(child_key, math.inf):
                     pruned_labels += 1
@@ -449,7 +544,7 @@ class TemporalRoadmapPlanner:
                 labels.append(child_label)
                 child_label_id = len(labels) - 1
                 generated_labels += 1
-                heuristic = euclidean_distance_xy(query_graph.nodes[edge.target_id].pose, goal_pose)
+                heuristic = self._heuristic(query_graph.nodes[edge.target_id].pose, goal_pose)
                 tie_breaker += 1
                 heapq.heappush(open_heap, (child_cost + heuristic, heuristic, tie_breaker, child_label_id))
 
@@ -478,18 +573,25 @@ class TemporalRoadmapPlanner:
         stats_before: dict[str, int],
     ) -> dict[str, object]:
         if validator is None:
-            return debug
+            merged = dict(debug)
+            merged["temporal_annotation_mode"] = self.config.temporal_annotation_mode
+            merged["temporal_cache_enabled"] = False
+            merged["temporal_interval_lookup_enabled"] = False
+            merged["edge_temporal_annotation_entries"] = len(self.temporal_annotation_store)
+            return merged
         stats_after = validator.stats.as_dict()
         query_stats = {
             key: stats_after.get(key, 0) - stats_before.get(key, 0)
             for key in stats_after
         }
         merged = dict(debug)
+        merged["temporal_annotation_mode"] = self.config.temporal_annotation_mode
         merged["temporal_cache_enabled"] = True
         merged["temporal_interval_lookup_enabled"] = self.config.use_temporal_intervals
         merged["temporal_cache_stats"] = query_stats
         merged["temporal_cache_total_stats"] = stats_after
         merged["temporal_bin_cache_entries"] = len(validator.bin_cache)
         merged["temporal_interval_cache_entries"] = len(validator.interval_cache)
+        merged["edge_temporal_annotation_entries"] = len(self.temporal_annotation_store)
         merged["edge_obstacle_interaction_cache_entries"] = len(validator.interaction_cache)
         return merged

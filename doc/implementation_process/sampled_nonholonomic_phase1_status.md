@@ -1,6 +1,8 @@
 # Sampled Nonholonomic Roadmap Phase 1 Status
 
-This update implements the Phase 1 direction from `nonholonomic_ta_prm_spec.md`: a reusable sampled nonholonomic static roadmap.
+This update implements the Phase 1 direction from
+`doc/implementation_process/nonholonomic_ta_prm_spec.md`: a reusable sampled
+nonholonomic static roadmap.
 
 ## Main Entry Point
 

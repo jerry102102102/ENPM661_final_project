@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare online validation, bin cache, and sampled interval cache."""
+"""Compare online validation, bin cache, and ACTEA interval annotation."""
 
 from __future__ import annotations
 
@@ -72,11 +72,10 @@ def _run_mode(mode: str) -> dict:
             goal_heading_tolerance_rad=math.radians(30.0),
             connection_position_tolerance_m=0.15,
             connection_heading_tolerance_rad=math.radians(30.0),
-            use_temporal_cache=mode in {"bin_cache", "interval_cache"},
-            use_temporal_intervals=mode == "interval_cache",
+            temporal_annotation_mode=mode,
         ),
     )
-    if mode == "interval_cache":
+    if mode == "actea":
         planner.annotate_edge_obstacle_interactions(dynamic_obstacles, start_time_s=0.0, end_time_s=8.0)
         planner.annotate_temporal_intervals(dynamic_obstacles, start_time_s=0.0, end_time_s=8.0, step_s=0.25)
     elif mode == "bin_cache":
@@ -102,7 +101,7 @@ def _run_mode(mode: str) -> dict:
 
 def main() -> int:
     payload = {
-        "modes": [_run_mode(mode) for mode in ("online", "bin_cache", "interval_cache")],
+        "modes": [_run_mode(mode) for mode in ("online", "bin_cache", "actea")],
     }
     output = Path("outputs/temporal_cache_benchmark/summary.json")
     _write_json(output, payload)
