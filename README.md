@@ -39,12 +39,6 @@ Implementation process notes are separated under:
 doc/implementation_process/
 ```
 
-Chinese-only local drafts are ignored by git under:
-
-```text
-doc/local_zh_notes/
-```
-
 ## Run Tests
 
 ```bash
