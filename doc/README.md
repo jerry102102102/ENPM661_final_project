@@ -132,10 +132,10 @@ ros2 launch team_car_control actea_control.launch.py
 ```
 
 The default route is planned for simulation time 6.0 seconds, and the controller
-waits until that time before moving.
-If the scene has already been running past that time, regenerate the route with
-`python3 scripts/run_mbgazworld_planner_demo.py --start-time <future_sim_time>`
-and pass the resulting route via `route_file:=...`.
+reads Gazebo simulation time and waits for the next equivalent periodic
+departure phase before moving.  The demo obstacles share a 24-second period, so
+if the scene is already past 6 seconds the controller waits for the next
+`6 + 24k` second phase.
 
 The launch file first uses `outputs/gazebo_integration/mbgazworld_route.json`
 if it exists, then falls back to the packaged default route. To force a specific

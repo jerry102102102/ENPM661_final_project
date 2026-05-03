@@ -41,6 +41,7 @@ def generate_launch_description():
             DeclareLaunchArgument("lookahead_m", default_value="0.22"),
             DeclareLaunchArgument("goal_tolerance_m", default_value="0.16"),
             DeclareLaunchArgument("planned_start_time_s", default_value="-1.0"),
+            DeclareLaunchArgument("route_period_s", default_value="-1.0"),
             DeclareLaunchArgument("controller_start_delay_s", default_value="6.0"),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(gazebo_launch),
@@ -72,6 +73,7 @@ def generate_launch_description():
                             {"lookahead_m": LaunchConfiguration("lookahead_m")},
                             {"goal_tolerance_m": LaunchConfiguration("goal_tolerance_m")},
                             {"planned_start_time_s": LaunchConfiguration("planned_start_time_s")},
+                            {"route_period_s": LaunchConfiguration("route_period_s")},
                             {"start_time_late_tolerance_s": "2.0"},
                             {"execution_log_path": LaunchConfiguration("execution_log_path")},
                         ],

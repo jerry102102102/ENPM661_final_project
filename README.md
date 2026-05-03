@@ -141,12 +141,10 @@ ros2 launch team_car_control actea_control.launch.py
 ```
 
 The packaged route is planned for `planned_start_time_s = 6.0`. The controller
-waits until Gazebo simulation time reaches that value before moving, so ACTEA's
-departure-time reasoning lines up with the periodic obstacles.
-If you start the controller after simulation time has already passed 6 seconds,
-regenerate a route for a future time, for example
-`python3 scripts/run_mbgazworld_planner_demo.py --start-time 25`, then pass that
-route with `route_file:=outputs/gazebo_integration/mbgazworld_route.json`.
+reads Gazebo simulation time and waits for the next equivalent periodic
+departure phase before moving. If the scene is already past 6 seconds, it waits
+for the next `6 + 24k` second departure phase because the demo obstacles share
+a 24-second period.
 
 Headless mode:
 

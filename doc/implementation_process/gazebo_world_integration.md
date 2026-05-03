@@ -101,13 +101,11 @@ The ROS2 package also includes a packaged default route:
 ros2_ws/src/team_car_control/routes/mbgazworld_route.json
 ```
 
-The default route is planned for simulation time `6.0s`.  The control node
-waits until Gazebo simulation time reaches the route's `planned_start_time_s`
-before moving, so periodic obstacle positions and ACTEA departure-time
-reasoning stay aligned.
-If the scene has already been running longer than that, regenerate the route
-with a future `--start-time` and pass the generated JSON through
-`route_file:=...`.
+The default route is planned for simulation time `6.0s` and declares
+`route_period_s = 24.0`.  The control node reads Gazebo simulation time and
+waits for the next equivalent departure phase `6 + 24k` before moving, so
+periodic obstacle positions and ACTEA departure-time reasoning stay aligned
+even when scene and controller are launched separately.
 
 `actea_control.launch.py` and `actea_bringup.launch.py` use the regenerated
 output route when it exists and otherwise fall back to this packaged route.

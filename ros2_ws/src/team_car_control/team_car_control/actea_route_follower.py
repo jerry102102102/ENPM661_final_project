@@ -61,6 +61,7 @@ class ActeaRouteFollower(Node):
         self.declare_parameter("rear_drive_sign_right", 1.0)
         self.declare_parameter("auto_start", True)
         self.declare_parameter("planned_start_time_s", -1.0)
+        self.declare_parameter("route_period_s", -1.0)
         self.declare_parameter("start_time_late_tolerance_s", 0.75)
         self.declare_parameter("execution_log_path", "outputs/gazebo_integration/actea_gazebo_execution_{stamp}.csv")
 
@@ -93,6 +94,13 @@ class ActeaRouteFollower(Node):
             if requested_start_time >= 0.0
             else float(self.route_payload.get("planned_start_time_s", 0.0))
         )
+        requested_period = float(self.get_parameter("route_period_s").value)
+        self.route_period_s = (
+            requested_period
+            if requested_period > 0.0
+            else float(self.route_payload.get("route_period_s", 0.0))
+        )
+        self.effective_start_time_s: float | None = None
         self.goal_pose = self.route[-1]
         self.nearest_index = 0
         self.started = False
@@ -133,7 +141,8 @@ class ActeaRouteFollower(Node):
         self.get_logger().info(
             f"ACTEA route follower loaded {len(self.route)} waypoints from {self.route_file}; "
             f"pose_info_topic={self.pose_info_topic}, auto_start={self.auto_start}, "
-            f"planned_start_time_s={self.planned_start_time_s:.2f}"
+            f"planned_start_time_s={self.planned_start_time_s:.2f}, "
+            f"route_period_s={self.route_period_s:.2f}"
         )
 
     def _load_route_payload(self, path: Path) -> dict:
@@ -176,13 +185,14 @@ class ActeaRouteFollower(Node):
         if self.done or not self.auto_start:
             return
         sim_time_s = self._sim_time_s()
-        if sim_time_s < self.planned_start_time_s:
+        scheduled_start_s = self._scheduled_start_time(sim_time_s)
+        if sim_time_s < scheduled_start_s:
             self.planned_path_pub.publish(self._path_msg(self.route))
             if not self.started and time.perf_counter() - self.last_wait_log_wall >= 1.0:
                 self.last_wait_log_wall = time.perf_counter()
                 self.get_logger().info(
-                    f"Waiting for planned_start_time_s={self.planned_start_time_s:.2f}; "
-                    f"current sim time={sim_time_s:.2f}"
+                    f"Waiting for scheduled ACTEA departure time {scheduled_start_s:.2f}s "
+                    f"(planned phase {self.planned_start_time_s:.2f}s, current sim {sim_time_s:.2f}s)."
                 )
             return
         actual_pose = self._latest_model_pose()
@@ -193,16 +203,15 @@ class ActeaRouteFollower(Node):
             self.started = True
             self.start_wall = time.perf_counter()
             self.last_progress_wall = self.start_wall
-            if sim_time_s > self.planned_start_time_s + self.start_time_late_tolerance_s:
+            if sim_time_s > scheduled_start_s + self.start_time_late_tolerance_s:
                 self.get_logger().warn(
                     f"Starting at sim time {sim_time_s:.2f}s, but route was planned for "
-                    f"{self.planned_start_time_s:.2f}s. Regenerate the route with "
-                    "--start-time close to the intended controller start time for best temporal alignment."
+                    f"scheduled phase time {scheduled_start_s:.2f}s."
                 )
-            elif abs(sim_time_s - self.planned_start_time_s) <= self.start_time_late_tolerance_s:
+            elif abs(sim_time_s - scheduled_start_s) <= self.start_time_late_tolerance_s:
                 self.get_logger().info(
                     f"Starting near planned departure time: sim={sim_time_s:.2f}s, "
-                    f"planned={self.planned_start_time_s:.2f}s."
+                    f"scheduled={scheduled_start_s:.2f}s."
                 )
             self.get_logger().info("Starting ACTEA closed-loop route execution.")
 
@@ -290,6 +299,20 @@ class ActeaRouteFollower(Node):
 
     def _sim_time_s(self) -> float:
         return self.get_clock().now().nanoseconds / 1_000_000_000.0
+
+    def _scheduled_start_time(self, sim_time_s: float) -> float:
+        if self.effective_start_time_s is not None:
+            return self.effective_start_time_s
+        scheduled = self.planned_start_time_s
+        if self.route_period_s > 0.0 and sim_time_s > scheduled + self.start_time_late_tolerance_s:
+            cycles = math.ceil((sim_time_s - scheduled) / self.route_period_s)
+            scheduled += cycles * self.route_period_s
+            self.get_logger().info(
+                f"Current sim time {sim_time_s:.2f}s already passed planned departure "
+                f"{self.planned_start_time_s:.2f}s; waiting for next periodic phase at {scheduled:.2f}s."
+            )
+        self.effective_start_time_s = scheduled
+        return scheduled
 
     @staticmethod
     def _find_nearest_path_index(path: list[RoutePose], pose: RoutePose, start_index: int) -> int:

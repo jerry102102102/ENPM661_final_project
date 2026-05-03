@@ -24,11 +24,12 @@ def main() -> None:
     parser.add_argument("--xy-samples", type=int, default=360)
     parser.add_argument("--grid-spacing", type=float, default=0.25)
     parser.add_argument("--start-time", type=float, default=6.0)
+    parser.add_argument("--route-period", type=float, default=24.0)
     parser.add_argument("--start", type=float, nargs=3, default=(0.35, 0.35, 0.0), metavar=("X", "Y", "THETA_RAD"))
     parser.add_argument("--goal", type=float, nargs=3, default=(3.65, 1.65, 0.0), metavar=("X", "Y", "THETA_RAD"))
     args = parser.parse_args()
 
-    imported = import_gazebo_world_config(args.config, annotation_horizon_s=args.horizon, margin_m=0.35)
+    imported = import_gazebo_world_config(args.config, annotation_horizon_s=args.horizon, margin_m=0.8)
     config = method_run_config_from_gazebo_import(
         imported,
         xy_sample_count=args.xy_samples,
@@ -60,6 +61,7 @@ def main() -> None:
                 "success": route.success,
                 "message": route.message,
                 "planned_start_time_s": args.start_time,
+                "route_period_s": args.route_period,
                 "start_pose_gazebo": {"x": start_gazebo.x, "y": start_gazebo.y, "theta": start_gazebo.theta},
                 "goal_pose_gazebo": {"x": goal_gazebo.x, "y": goal_gazebo.y, "theta": goal_gazebo.theta},
                 "build_time_s": planning_function.build_time_s,
