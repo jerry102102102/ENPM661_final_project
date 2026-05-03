@@ -93,6 +93,17 @@ Output:
 outputs/gazebo_integration/mbgazworld_route.json
 ```
 
+The ROS2 package also includes a packaged default route:
+
+```text
+ros2_ws/src/team_car_control/routes/mbgazworld_route.json
+```
+
+`actea_bringup.launch.py` uses the regenerated output route when it exists and
+otherwise falls back to this packaged route.  This lets a fresh clone launch the
+Gazebo demo after a ROS2 build, while still allowing planner changes to produce
+a new route.
+
 ## External Repo Import
 
 External reference repositories should be cloned under `.external_repos/` or
@@ -148,3 +159,8 @@ ACTEA_PROJECT_ROOT=$PWD ros2 launch team_car_control actea_bringup.launch.py
 The route JSON contains planner-frame waypoints and Gazebo-frame waypoints.
 The Gazebo route follower uses `gazebo_waypoints`, so the controller tracks the
 path in the same coordinate frame as the SDF world.
+
+The Gazebo world in `mbgazworld_actea.sdf` uses an inline directional light and
+an inline ground plane instead of `model://sun` and `model://ground_plane`.
+This avoids environment-dependent failures when the standard Gazebo model
+database is not installed or not on the resource path.

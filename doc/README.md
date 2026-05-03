@@ -99,7 +99,8 @@ the robot reaching the goal in a 5-second animation.
 
 ## Gazebo Demo
 
-To generate an ACTEA route on the imported Gazebo map:
+The ROS2 package includes a default route. To regenerate an ACTEA route on the
+imported Gazebo map:
 
 ```bash
 python3 scripts/run_mbgazworld_planner_demo.py
@@ -116,6 +117,6 @@ source install/setup.zsh
 ros2 launch team_car_control actea_bringup.launch.py
 ```
 
-If launching from another directory, pass
-`route_file:=/absolute/path/to/mbgazworld_route.json` or set
-`ACTEA_PROJECT_ROOT=/absolute/path/to/ENPM661_final_project`.
+The launch file first uses `outputs/gazebo_integration/mbgazworld_route.json`
+if it exists, then falls back to the packaged default route. To force a specific
+route, pass `route_file:=/absolute/path/to/mbgazworld_route.json`.

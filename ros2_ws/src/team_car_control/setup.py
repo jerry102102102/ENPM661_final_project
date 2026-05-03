@@ -15,6 +15,7 @@ setup(
             f"share/{package_name}/launch",
             ["launch/control.launch.py", "launch/bringup.launch.py", "launch/actea_bringup.launch.py"],
         ),
+        (f"share/{package_name}/routes", ["routes/mbgazworld_route.json"]),
     ],
     install_requires=["setuptools", "numpy"],
     zip_safe=True,

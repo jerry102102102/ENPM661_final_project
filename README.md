@@ -92,14 +92,14 @@ The ROS2/Gazebo packages copied from the Group 4 Phase 2 stack live under:
 ros2_ws/src/
 ```
 
-Before launching Gazebo, generate the ACTEA route for the imported
-`mbgazworld` map:
+The package includes a default ACTEA route for the imported `mbgazworld` map.
+To regenerate it after planner changes, run:
 
 ```bash
 PYTHONPYCACHEPREFIX=/tmp/codex_pycache python3 scripts/run_mbgazworld_planner_demo.py
 ```
 
-This writes:
+This writes a fresh route:
 
 ```text
 outputs/gazebo_integration/mbgazworld_route.json
@@ -125,8 +125,8 @@ ros2 launch team_car_control actea_bringup.launch.py headless:=true
 The launch file starts the imported `mbgazworld` Gazebo scene, spawns the team
 car model, and runs a closed-loop route follower over the ACTEA-generated path.
 
-`actea_bringup.launch.py` looks for
-`outputs/gazebo_integration/mbgazworld_route.json` relative to the directory
-where `ros2 launch` is executed. If you launch from somewhere other than the
-repository root, either pass `route_file:=/absolute/path/to/mbgazworld_route.json`
-or set `ACTEA_PROJECT_ROOT=/absolute/path/to/ENPM661_final_project`.
+`actea_bringup.launch.py` first looks for a regenerated route at
+`outputs/gazebo_integration/mbgazworld_route.json`. If that file is missing, it
+falls back to the packaged route under `team_car_control/routes/`. If you want
+to force a specific route, pass
+`route_file:=/absolute/path/to/mbgazworld_route.json`.

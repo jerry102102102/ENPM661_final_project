@@ -15,11 +15,14 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    control_share = get_package_share_directory("team_car_control")
     description_share = get_package_share_directory("team_car_description")
     gazebo_launch = os.path.join(description_share, "launch", "gazebo.launch.py")
     world_path = os.path.join(description_share, "world", "mbgazworld_actea.sdf")
     project_root = Path(os.environ.get("ACTEA_PROJECT_ROOT", Path.cwd())).resolve()
-    default_route_file = project_root / "outputs" / "gazebo_integration" / "mbgazworld_route.json"
+    generated_route_file = project_root / "outputs" / "gazebo_integration" / "mbgazworld_route.json"
+    packaged_route_file = Path(control_share) / "routes" / "mbgazworld_route.json"
+    default_route_file = generated_route_file if generated_route_file.exists() else packaged_route_file
     default_log_path = project_root / "outputs" / "gazebo_integration" / "actea_gazebo_execution_{stamp}.csv"
 
     return LaunchDescription(
@@ -69,4 +72,3 @@ def generate_launch_description():
             ),
         ]
     )
-
