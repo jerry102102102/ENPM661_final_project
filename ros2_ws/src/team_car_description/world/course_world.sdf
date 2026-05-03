@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <world name="phase2_course">
+
+    <plugin filename="ignition-gazebo-physics-system" name="ignition::gazebo::systems::Physics"/>
+    <plugin filename="ignition-gazebo-user-commands-system" name="ignition::gazebo::systems::UserCommands"/>
+    <plugin filename="ignition-gazebo-scene-broadcaster-system" name="ignition::gazebo::systems::SceneBroadcaster"/>
+    <plugin filename="ignition-gazebo-contact-system" name="ignition::gazebo::systems::Contact"/>
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.2 -1</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>4.10 2.10 0.01</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <pose>0 0 0.001 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>4.10 2.10 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.78 0.80 0.86 1</ambient>
+            <diffuse>0.78 0.80 0.86 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>2.0 1.0 -0.005 0 0 0</pose>
+    </model>
+
+    <!-- Outer walls sit just outside the 4.0 m x 2.0 m course bounds. -->
+    <model name="left_boundary_wall">
+      <static>true</static>
+      <pose>-0.025 1.0 0.10 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.05 2.10 0.20</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.05 2.10 0.20</size></box></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      </link>
+    </model>
+    <!-- right_boundary_wall removed: x=4.0 is the finish line, not a blocking wall. -->
+    <model name="bottom_boundary_wall">
+      <static>true</static>
+      <pose>2.0 -0.025 0.10 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>4.10 0.05 0.20</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>4.10 0.05 0.20</size></box></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="top_boundary_wall">
+      <static>true</static>
+      <pose>2.0 2.025 0.10 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>4.10 0.05 0.20</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>4.10 0.05 0.20</size></box></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- Internal obstacles from Part01/map_spec.py, extruded to 0.20 m. -->
+    <model name="bottom_left_bar">
+      <static>true</static>
+      <pose>0.7483 1.3813 0.10 0 0 -1.0471975512</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>1.40 0.05 0.20</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>1.40 0.05 0.20</size></box></geometry><material><ambient>0.0 0.1 0.9 1</ambient><diffuse>0.0 0.1 0.9 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="top_bar">
+      <static>true</static>
+      <pose>2.95 1.275 0.10 0 0 1.5707963268</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>1.45 0.05 0.20</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>1.45 0.05 0.20</size></box></geometry><material><ambient>0.0 0.1 0.9 1</ambient><diffuse>0.0 0.1 0.9 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="bottom_right_bar">
+      <static>true</static>
+      <pose>1.6113 0.5971 0.10 0 0 1.0471975512</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>1.35 0.05 0.20</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>1.35 0.05 0.20</size></box></geometry><material><ambient>0.0 0.1 0.9 1</ambient><diffuse>0.0 0.1 0.9 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="square_upper_left">
+      <static>true</static>
+      <pose>2.20 1.74 0.10 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.304 0.304 0.20</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.304 0.304 0.20</size></box></geometry><material><ambient>0.0 0.1 0.9 1</ambient><diffuse>0.0 0.1 0.9 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="square_mid_left">
+      <static>true</static>
+      <pose>1.335 1.55 0.10 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.304 0.304 0.20</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.304 0.304 0.20</size></box></geometry><material><ambient>0.0 0.1 0.9 1</ambient><diffuse>0.0 0.1 0.9 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="square_lower_right">
+      <static>true</static>
+      <pose>0.42 0.45 0.10 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.304 0.304 0.20</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.304 0.304 0.20</size></box></geometry><material><ambient>0.0 0.1 0.9 1</ambient><diffuse>0.0 0.1 0.9 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="start_marker">
+      <static>true</static>
+      <pose>0.25 1.0 0.004 0 0 0</pose>
+      <link name="link">
+        <visual name="visual"><geometry><cylinder><radius>0.05</radius><length>0.006</length></cylinder></geometry><material><ambient>0.0 0.75 0.15 1</ambient><diffuse>0.0 0.75 0.15 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="end_line">
+      <static>true</static>
+      <pose>4.0 1.0 0.004 0 0 0</pose>
+      <link name="link">
+        <visual name="visual"><geometry><box><size>0.025 2.0 0.006</size></box></geometry><material><ambient>0.9 0.1 0.1 1</ambient><diffuse>0.9 0.1 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+  </world>
+</sdf>

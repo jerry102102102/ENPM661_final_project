@@ -1,0 +1,138 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+    
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>15.0 -15.0 10.0 0 0.5 2.3</pose>
+      </camera>
+    </gui>
+
+    <model name='wall_north'>
+      <static>1</static>
+      <pose>5.0 0.0 1.0 0 0 0.0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.2 4.0 2.0</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.2 4.0 2.0</size></box></geometry>
+          <material>
+            <ambient>0.7 0.7 0.7 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_south'>
+      <static>1</static>
+      <pose>-5.0 0.0 1.0 0 0 0.0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.2 6.0 2.0</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.2 6.0 2.0</size></box></geometry>
+          <material>
+            <ambient>0.7 0.7 0.7 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_west'>
+      <static>1</static>
+      <pose>0.0 5.0 1.0 0 0 0.0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>5.0 0.2 2.0</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>5.0 0.2 2.0</size></box></geometry>
+          <material>
+            <ambient>0.7 0.7 0.7 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_diagonal'>
+      <static>1</static>
+      <pose>2.0 -2.0 1.0 0 0 0.7853981633974483</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>3.0 0.2 2.0</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>3.0 0.2 2.0</size></box></geometry>
+          <material>
+            <ambient>0.7 0.7 0.7 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <actor name='orange_ball_1'>
+      <pose>-2.0 2.0 0.5 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><sphere><radius>0.5</radius></sphere></geometry>
+          <material>
+            <ambient>1 0.65 0 1</ambient> <!-- Orange RGBA -->
+            <diffuse>1 0.65 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="linear">
+          <waypoint>
+            <time>0</time>
+            <pose>-2.0 2.0 0.5 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>3</time>
+            <pose>2.0 2.0 0.5 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>6</time>
+            <pose>-2.0 2.0 0.5 0 0 0</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
+    <actor name='orange_ball_2'>
+      <pose>-2.0 -2.0 0.5 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><sphere><radius>0.5</radius></sphere></geometry>
+          <material>
+            <ambient>1 0.65 0 1</ambient> <!-- Orange RGBA -->
+            <diffuse>1 0.65 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="linear">
+          <waypoint>
+            <time>0</time>
+            <pose>-2.0 -2.0 0.5 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>4</time>
+            <pose>-2.0 2.0 0.5 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>8</time>
+            <pose>-2.0 -2.0 0.5 0 0 0</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
+  </world>
+</sdf>

@@ -141,6 +141,30 @@ class TemporalCacheTests(unittest.TestCase):
         self.assertFalse(validator.validate_edge(edge, 0.0, obstacles))
         self.assertEqual(validator.stats.interaction_cache_hits, 1)
 
+    def test_time_gated_actea_interval_respects_active_window(self) -> None:
+        edge = _edge()
+        collision = CollisionParams(radius_m=0.05, source="test")
+        # The obstacle sits on the edge but is only active after t = 2s.  Edge
+        # departures around t = 0 are valid; departures around t = 2 are blocked.
+        obstacle = DynamicCircleObstacle(
+            0.5,
+            0.0,
+            0.0,
+            0.0,
+            0.05,
+            "late_blocker",
+            active_start_time_s=2.0,
+            active_end_time_s=3.0,
+        )
+
+        blocked = edge_blocked_departure_intervals(edge, [obstacle], collision, 0.0, 0.0, 4.0)
+        valid = edge_valid_departure_intervals(edge, [obstacle], collision, 0.0, 0.0, 4.0)
+
+        self.assertGreaterEqual(len(blocked), 1)
+        self.assertTrue(any(start <= 2.0 <= end for start, end in blocked))
+        self.assertTrue(any(start <= 0.0 <= end for start, end in valid))
+        self.assertFalse(any(start <= 0.0 <= end for start, end in blocked))
+
 
 if __name__ == "__main__":
     unittest.main()

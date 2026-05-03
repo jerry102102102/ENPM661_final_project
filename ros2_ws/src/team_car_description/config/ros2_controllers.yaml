@@ -1,0 +1,36 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 200
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    rear_wheel_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+    steering_position_controller:
+      type: position_controllers/JointGroupPositionController
+
+joint_state_broadcaster:
+  ros__parameters:
+    interfaces:
+      - position
+      - velocity
+
+rear_wheel_velocity_controller:
+  ros__parameters:
+    joints:
+      - rld_joint
+      - rrd_joint
+    command_interfaces:
+      - velocity
+    state_interfaces:
+      - position
+      - velocity
+
+steering_position_controller:
+  ros__parameters:
+    joints:
+      - fls_joint
+      - frs_joint

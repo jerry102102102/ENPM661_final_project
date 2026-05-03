@@ -59,6 +59,7 @@ Recommended reading order:
 4. `implementation_process/sampled_nonholonomic_phase1_status.md`
 5. `implementation_process/phase2_temporal_roadmap_pipeline.md`
 6. `implementation_process/core_method_completion_and_evaluation_spec.md`
+7. `implementation_process/gazebo_world_integration.md`
 
 ## Quick Rule
 
@@ -95,3 +96,26 @@ outputs/demo/actea_2d_demo.mp4
 
 The demo shows a single ACTEA-planned query with moving circular obstacles and
 the robot reaching the goal in a 5-second animation.
+
+## Gazebo Demo
+
+To generate an ACTEA route on the imported Gazebo map:
+
+```bash
+python3 scripts/run_mbgazworld_planner_demo.py
+```
+
+To execute that route with the team-car Gazebo model and closed-loop route
+follower from the repository root:
+
+```bash
+source /opt/ros/humble/setup.zsh
+colcon build --base-paths ros2_ws/src \
+  --packages-select team_car_description team_car_interfaces team_car_control
+source install/setup.zsh
+ros2 launch team_car_control actea_bringup.launch.py
+```
+
+If launching from another directory, pass
+`route_file:=/absolute/path/to/mbgazworld_route.json` or set
+`ACTEA_PROJECT_ROOT=/absolute/path/to/ENPM661_final_project`.

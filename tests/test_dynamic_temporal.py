@@ -25,6 +25,27 @@ class DynamicTemporalTests(unittest.TestCase):
         self.assertFalse(temporal_collision_free(trajectory, 0.0, world, dynamic, collision))
         self.assertTrue(temporal_collision_free(trajectory, 0.0, world, [], collision))
 
+    def test_time_gated_obstacle_is_ignored_outside_active_window(self) -> None:
+        start = Pose2D(0.0, 0.0, 0.0)
+        end = Pose2D(1.0, 0.0, 0.0)
+        trajectory = TrajectorySegment(start, end, [start, end], 1.0, 1.0)
+        world = StaticWorld(bounds=(-1.0, 2.0, -1.0, 1.0), obstacles=[])
+        collision = CollisionParams(radius_m=0.1)
+        dynamic = [
+            DynamicCircleObstacle(
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.1,
+                active_start_time_s=2.0,
+                active_end_time_s=3.0,
+            )
+        ]
+
+        self.assertTrue(temporal_collision_free(trajectory, 0.0, world, dynamic, collision))
+        self.assertFalse(temporal_collision_free(trajectory, 2.0, world, dynamic, collision))
+
 
 if __name__ == "__main__":
     unittest.main()

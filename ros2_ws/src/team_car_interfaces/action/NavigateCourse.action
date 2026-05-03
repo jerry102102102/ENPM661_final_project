@@ -1,0 +1,27 @@
+float64 start_x
+float64 start_y
+float64 start_theta_deg
+float64 goal_x
+float64 goal_y
+float64 rpm1
+float64 rpm2
+float64 clearance
+string motion_profile
+string collision_profile
+bool execute
+---
+bool success
+string message
+float64 path_cost
+int32 expanded_nodes
+float64 planning_time_sec
+float64 execution_time_sec
+geometry_msgs/Pose2D final_pose
+float64[] left_rpms
+float64[] right_rpms
+geometry_msgs/Pose2D[] planned_path
+---
+string phase
+int32 current_index
+int32 total_indices
+geometry_msgs/Pose2D current_pose

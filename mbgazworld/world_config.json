@@ -1,0 +1,51 @@
+{
+  "world_name": "competition_environment",
+  "static_entities": [
+    {
+      "name": "wall_north",
+      "position": {"x": 5.0, "y": 0.0, "z": 1.0},
+      "scale": {"length": 0.2, "width": 4.0, "height": 2.0},
+      "rotation": 0
+    },
+    {
+      "name": "wall_south",
+      "position": {"x": -5.0, "y": 0.0, "z": 1.0},
+      "scale": {"length": 0.2, "width": 6.0, "height": 2.0},
+      "rotation": 0
+    },
+    {
+      "name": "wall_west",
+      "position": {"x": 0.0, "y": 5.0, "z": 1.0},
+      "scale": {"length": 5.0, "width": 0.2, "height": 2.0},
+      "rotation": 0
+    },
+    {
+      "name": "wall_diagonal",
+      "position": {"x": 2.0, "y": -2.0, "z": 1.0},
+      "scale": {"length": 3.0, "width": 0.2, "height": 2.0},
+      "rotation": 45
+    }
+  ],
+  "dynamic_entities": [
+    {
+      "name": "orange_ball_1",
+      "radius": 0.5,
+      "start_position": {"x": -2.0, "y": 2.0, "z": 0.5},
+      "waypoints": [
+        {"time": 0, "pos": {"x": -2.0, "y": 2.0, "z": 0.5}},
+        {"time": 3, "pos": {"x": 2.0, "y": 2.0, "z": 0.5}},
+        {"time": 6, "pos": {"x": -2.0, "y": 2.0, "z": 0.5}}
+      ]
+    },
+    {
+      "name": "orange_ball_2",
+      "radius": 0.5,
+      "start_position": {"x": -2.0, "y": -2.0, "z": 0.5},
+      "waypoints": [
+        {"time": 0, "pos": {"x": -2.0, "y": -2.0, "z": 0.5}},
+        {"time": 4, "pos": {"x": -2.0, "y": 2.0, "z": 0.5}},
+        {"time": 8, "pos": {"x": -2.0, "y": -2.0, "z": 0.5}}
+      ]
+    }
+  ]
+}

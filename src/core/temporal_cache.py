@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import math
+from typing import Optional
 
 from src.configs.defaults import CollisionParams
 from src.core.time_parameterization import normalized_sample_times
@@ -14,7 +15,7 @@ from src.models.state import Pose2D, TrajectorySegment
 
 
 Interval = tuple[float, float]
-ObstacleSignature = tuple[tuple[str, float, float, float, float, float], ...]
+ObstacleSignature = tuple[tuple[str, float, float, float, float, float, Optional[float], Optional[float]], ...]
 EPS = 1e-12
 
 
@@ -267,6 +268,12 @@ def dynamic_obstacle_swept_bounds(
 ) -> AxisAlignedBounds:
     """Return AABB swept by a constant-velocity circle over a time range."""
 
+    if obstacle.active_start_time_s is not None:
+        start_time_s = max(start_time_s, obstacle.active_start_time_s)
+    if obstacle.active_end_time_s is not None:
+        end_time_s = min(end_time_s, obstacle.active_end_time_s)
+    if end_time_s < start_time_s - EPS:
+        return AxisAlignedBounds(math.inf, -math.inf, math.inf, -math.inf)
     start_x = obstacle.initial_x + obstacle.velocity_x * start_time_s
     start_y = obstacle.initial_y + obstacle.velocity_y * start_time_s
     end_x = obstacle.initial_x + obstacle.velocity_x * end_time_s
@@ -315,14 +322,33 @@ def _pose_segment_departure_blocked_intervals(
     cx = -obstacle.velocity_x
     cy = -obstacle.velocity_y
     radius = collision_radius + obstacle.radius
+    active_start = -math.inf if obstacle.active_start_time_s is None else obstacle.active_start_time_s
+    active_end = math.inf if obstacle.active_end_time_s is None else obstacle.active_end_time_s
 
     blocked: list[Interval] = []
 
-    # Endpoint cases: s = rel_time_a and s = rel_time_b.
+    # Boundary cases: s = rel_time_a and s = rel_time_b.
     for rel_time in (rel_time_a, rel_time_b):
         q0 = (ax + bx * rel_time, ay + by * rel_time)
         q1 = (cx, cy)
-        for interval in _quadratic_norm_leq_intervals(q0, q1, radius):
+        active_range = _solve_linear_range(1.0, rel_time, active_start, active_end)
+        for interval in _intersect_interval_lists(_quadratic_norm_leq_intervals(q0, q1, radius), active_range):
+            clipped = _clip_interval(interval, horizon_start_s, horizon_end_s)
+            if clipped is not None:
+                blocked.append(clipped)
+
+    # Boundary cases: absolute obstacle-segment activation time d + s = const.
+    # These boundaries matter when periodic / waypoint trajectories are expanded
+    # into time-gated constant-velocity segments.
+    for active_time in (active_start, active_end):
+        if not math.isfinite(active_time):
+            continue
+        # s = active_time - d:
+        # A + B*s + C*d = A + B*active_time + (C - B)*d.
+        q0 = (ax + bx * active_time, ay + by * active_time)
+        q1 = (cx - bx, cy - by)
+        segment_range = _solve_linear_range(-1.0, active_time, rel_time_a, rel_time_b)
+        for interval in _intersect_interval_lists(_quadratic_norm_leq_intervals(q0, q1, radius), segment_range):
             clipped = _clip_interval(interval, horizon_start_s, horizon_end_s)
             if clipped is not None:
                 blocked.append(clipped)
@@ -336,7 +362,10 @@ def _pose_segment_departure_blocked_intervals(
     # s*(d) = -(B dot (A + C*d)) / ||B||^2 = alpha*d + beta.
     alpha = -((bx * cx) + (by * cy)) / bb
     beta = -((bx * ax) + (by * ay)) / bb
-    s_range = _solve_linear_range(alpha, beta, rel_time_a, rel_time_b)
+    s_range = _intersect_interval_lists(
+        _solve_linear_range(alpha, beta, rel_time_a, rel_time_b),
+        _solve_linear_range(alpha + 1.0, beta, active_start, active_end),
+    )
 
     # Perpendicular residual P(A + C*d), where P projects orthogonal to B.
     # This is q0 + q1*d in the 2D plane.
@@ -429,7 +458,7 @@ def edge_valid_departure_intervals(
     )
 
 
-def obstacle_signature(obstacles: list[DynamicCircleObstacle]) -> tuple[tuple[str, float, float, float, float, float], ...]:
+def obstacle_signature(obstacles: list[DynamicCircleObstacle]) -> ObstacleSignature:
     """Stable signature for a dynamic-obstacle scenario."""
 
     return tuple(
@@ -441,6 +470,8 @@ def obstacle_signature(obstacles: list[DynamicCircleObstacle]) -> tuple[tuple[st
                 round(obstacle.velocity_x, 9),
                 round(obstacle.velocity_y, 9),
                 round(obstacle.radius, 9),
+                None if obstacle.active_start_time_s is None else round(obstacle.active_start_time_s, 9),
+                None if obstacle.active_end_time_s is None else round(obstacle.active_end_time_s, 9),
             )
             for obstacle in obstacles
         )
@@ -479,15 +510,13 @@ class CachedTemporalValidator:
     use_interval_lookup: bool = True
     stats: TemporalValidationStats = field(default_factory=TemporalValidationStats)
     annotation_store: EdgeTemporalAnnotationStore = field(default_factory=EdgeTemporalAnnotationStore)
-    bin_cache: dict[tuple[int, int, tuple[tuple[str, float, float, float, float, float], ...]], bool] = field(
-        default_factory=dict
-    )
+    bin_cache: dict[tuple[int, int, ObstacleSignature], bool] = field(default_factory=dict)
     interval_cache: dict[
-        tuple[int, tuple[tuple[str, float, float, float, float, float], ...]],
+        tuple[int, ObstacleSignature],
         list[TemporalValidityInterval],
     ] = field(default_factory=dict)
     interaction_cache: dict[
-        tuple[int, tuple[tuple[str, float, float, float, float, float], ...]],
+        tuple[int, ObstacleSignature],
         tuple[int, ...],
     ] = field(default_factory=dict)
 
@@ -499,7 +528,7 @@ class CachedTemporalValidator:
         edge_id: int,
         departure_time_s: float,
         dynamic_obstacles: list[DynamicCircleObstacle],
-    ) -> tuple[int, int, tuple[tuple[str, float, float, float, float, float], ...]]:
+    ) -> tuple[int, int, ObstacleSignature]:
         return (edge_id, self.time_bin(departure_time_s), obstacle_signature(dynamic_obstacles))
 
     def _interval_key(

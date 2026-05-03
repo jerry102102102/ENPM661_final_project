@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="team_car">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.0087452750932692 3.35383570956894E-10 0.0553719372233439"
+        rpy="0 0 0" />
+      <mass
+        value="2.67013965482814" />
+      <inertia
+        ixx="0.00556607168399937"
+        ixy="-1.48550899208538E-10"
+        ixz="0.000800576850897462"
+        iyy="0.0146376832128115"
+        iyz="4.41242057471814E-11"
+        izz="0.0166080016596797" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="front_left_steer">
+    <inertial>
+      <origin
+        xyz="6.84627940450433E-09 0.00177583874781438 7.0047269181972E-06"
+        rpy="0 0 0" />
+      <mass
+        value="0.000591397328739017" />
+      <inertia
+        ixx="1.40323298869158E-08"
+        ixy="3.93116130408378E-14"
+        ixz="-9.96748914156153E-14"
+        iyy="9.53379977971968E-09"
+        iyz="-4.898220030663E-14"
+        izz="1.16380137611285E-08" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/front_left_steer.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/front_left_steer.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="fls_joint"
+    type="revolute">
+    <origin
+      xyz="0.076091 0.059588 0.028042"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="front_left_steer" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.7854"
+      upper="0.7854"
+      effort="400"
+      velocity="16.0" />
+  </joint>
+  <link
+    name="front_left_drive">
+    <inertial>
+      <origin
+        xyz="0 0 0.003723"
+        rpy="0 0 0" />
+      <mass
+        value="0.020949" />
+      <inertia
+        ixx="6.5615E-06"
+        ixy="-2.7161E-22"
+        ixz="-4.6794E-22"
+        iyy="6.5615E-06"
+        iyz="6.0896E-23"
+        izz="1.1496E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/front_left_drive.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/front_left_drive.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="fld_joint"
+    type="continuous">
+    <origin
+      xyz="0 0.0070104 0"
+      rpy="1.5708 0 0" />
+    <parent
+      link="front_left_steer" />
+    <child
+      link="front_left_drive" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="front_right_steer">
+    <inertial>
+      <origin
+        xyz="-6.84628144453914E-09 -0.00177583874781488 7.00472691822496E-06"
+        rpy="0 0 0" />
+      <mass
+        value="0.000591397328739017" />
+      <inertia
+        ixx="1.40323298869158E-08"
+        ixy="3.93116130320776E-14"
+        ixz="9.96748914164301E-14"
+        iyy="9.53379977971969E-09"
+        iyz="4.89822002864024E-14"
+        izz="1.16380137611285E-08" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/front_right_steer.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/front_right_steer.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="frs_joint"
+    type="revolute">
+    <origin
+      xyz="0.076091 -0.059588 0.028042"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="front_right_steer" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.7854"
+      upper="0.7854"
+      effort="400"
+      velocity="16.0" />
+  </joint>
+  <link
+    name="front_right_drive">
+    <inertial>
+      <origin
+        xyz="-6.93889390390723E-18 0 -0.00372297917417092"
+        rpy="0 0 0" />
+      <mass
+        value="0.020949347739321" />
+      <inertia
+        ixx="6.56151326213766E-06"
+        ixy="-3.66211426251759E-22"
+        ixz="-7.68067323286438E-23"
+        iyy="6.56151326213766E-06"
+        iyz="3.04658669838996E-23"
+        izz="1.14960324396082E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/front_right_drive.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/front_right_drive.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="frd_joint"
+    type="continuous">
+    <origin
+      xyz="0 -0.0070104 0"
+      rpy="1.5708 0 0" />
+    <parent
+      link="front_right_steer" />
+    <child
+      link="front_right_drive" />
+    <axis
+      xyz="0 0 -1" />
+  </joint>
+  <link
+    name="rear_left_drive">
+    <inertial>
+      <origin
+        xyz="5.55111512312578E-17 0 0.00828560712443368"
+        rpy="0 0 0" />
+      <mass
+        value="0.0236803343805238" />
+      <inertia
+        ixx="6.98574043333613E-06"
+        ixy="-1.04037684408603E-37"
+        ixz="-7.72920177020811E-24"
+        iyy="6.98574043333612E-06"
+        iyz="3.44713884325426E-38"
+        izz="1.15429538496757E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/rear_left_drive.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/rear_left_drive.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="rld_joint"
+    type="continuous">
+    <origin
+      xyz="-0.064117 0.070104 0.028042"
+      rpy="1.5708 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="rear_left_drive" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="rear_right_drive">
+    <inertial>
+      <origin
+        xyz="-5.55111512312578E-17 0 -0.00828560712443369"
+        rpy="0 0 0" />
+      <mass
+        value="0.0236803343805238" />
+      <inertia
+        ixx="6.98574043333613E-06"
+        ixy="1.66686732850355E-21"
+        ixz="-3.20594355182772E-23"
+        iyy="6.98574043333613E-06"
+        iyz="-2.6260271562932E-23"
+        izz="1.15429538496757E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/rear_right_drive.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://team_car_description/meshes/rear_right_drive.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="rrd_joint"
+    type="continuous">
+    <origin
+      xyz="-0.064117 -0.070104 0.028042"
+      rpy="1.5708 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="rear_right_drive" />
+    <axis
+      xyz="0 0 -1" />
+  </joint>
+
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+
+    <joint name="fls_joint">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="frs_joint">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="fld_joint">
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="frd_joint">
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="rld_joint">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="rrd_joint">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+  </ros2_control>
+
+  <gazebo>
+    <plugin filename="ign_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>/tmp/team_car_ros2_control.yaml</parameters>
+    </plugin>
+  </gazebo>
+</robot>

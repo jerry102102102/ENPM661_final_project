@@ -30,6 +30,8 @@ def obstacle_to_dict(obstacle: DynamicCircleObstacle) -> dict[str, float | str]:
         "velocity_x": obstacle.velocity_x,
         "velocity_y": obstacle.velocity_y,
         "radius": obstacle.radius,
+        "active_start_time_s": obstacle.active_start_time_s,
+        "active_end_time_s": obstacle.active_end_time_s,
     }
 
 

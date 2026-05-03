@@ -83,3 +83,50 @@ static gates, the chosen path, and the robot reaching the goal.
 
 The script uses Pillow and system `ffmpeg` if available. If `ffmpeg` is not
 available, the GIF output is still generated.
+
+## Run The Gazebo Team-Car Demo
+
+The ROS2/Gazebo packages copied from the Group 4 Phase 2 stack live under:
+
+```text
+ros2_ws/src/
+```
+
+Before launching Gazebo, generate the ACTEA route for the imported
+`mbgazworld` map:
+
+```bash
+PYTHONPYCACHEPREFIX=/tmp/codex_pycache python3 scripts/run_mbgazworld_planner_demo.py
+```
+
+This writes:
+
+```text
+outputs/gazebo_integration/mbgazworld_route.json
+```
+
+Build and launch the Gazebo demo from the repository root:
+
+```bash
+source /opt/ros/humble/setup.zsh
+colcon build --base-paths ros2_ws/src \
+  --packages-select team_car_description team_car_interfaces team_car_control
+source install/setup.zsh
+
+ros2 launch team_car_control actea_bringup.launch.py
+```
+
+Headless mode:
+
+```bash
+ros2 launch team_car_control actea_bringup.launch.py headless:=true
+```
+
+The launch file starts the imported `mbgazworld` Gazebo scene, spawns the team
+car model, and runs a closed-loop route follower over the ACTEA-generated path.
+
+`actea_bringup.launch.py` looks for
+`outputs/gazebo_integration/mbgazworld_route.json` relative to the directory
+where `ros2 launch` is executed. If you launch from somewhere other than the
+repository root, either pass `route_file:=/absolute/path/to/mbgazworld_route.json`
+or set `ACTEA_PROJECT_ROOT=/absolute/path/to/ENPM661_final_project`.

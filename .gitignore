@@ -212,6 +212,10 @@ outputs/
 .DS_Store
 doc/local_zh_notes/
 
+# External reference repos copied locally for integration work.
+.external_repos/
+external_repos/
+
 # PyPI configuration file
 .pypirc
 

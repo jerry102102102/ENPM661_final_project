@@ -27,6 +27,8 @@ def dynamic_pose_collision(
 ) -> bool:
     """Return True if the robot footprint collides with one moving circle."""
 
+    if not obstacle.is_active_at(time_s):
+        return False
     obstacle_x, obstacle_y = obstacle_position_at_time(obstacle, time_s)
     effective_radius = collision.radius_m + obstacle.radius + clearance
     return math.hypot(pose.x - obstacle_x, pose.y - obstacle_y) <= effective_radius

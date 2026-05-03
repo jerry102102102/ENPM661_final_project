@@ -1,0 +1,5 @@
+controller_joint_names:
+  - fld_joint
+  - frd_joint
+  - rld_joint
+  - rrd_joint
