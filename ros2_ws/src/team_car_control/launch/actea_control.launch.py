@@ -32,6 +32,7 @@ def generate_launch_description():
             DeclareLaunchArgument("lookahead_m", default_value="0.22"),
             DeclareLaunchArgument("goal_tolerance_m", default_value="0.16"),
             DeclareLaunchArgument("planned_start_time_s", default_value="-1.0"),
+            DeclareLaunchArgument("start_time_late_tolerance_s", default_value="2.0"),
             Node(
                 package="team_car_control",
                 executable="actea_route_follower",
@@ -46,10 +47,10 @@ def generate_launch_description():
                     {"lookahead_m": LaunchConfiguration("lookahead_m")},
                     {"goal_tolerance_m": LaunchConfiguration("goal_tolerance_m")},
                     {"planned_start_time_s": LaunchConfiguration("planned_start_time_s")},
+                    {"start_time_late_tolerance_s": LaunchConfiguration("start_time_late_tolerance_s")},
                     {"execution_log_path": LaunchConfiguration("execution_log_path")},
                 ],
                 output="screen",
             ),
         ]
     )
-

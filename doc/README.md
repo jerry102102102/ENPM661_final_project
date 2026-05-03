@@ -115,7 +115,13 @@ colcon build --base-paths ros2_ws/src \
 source install/setup.zsh
 ```
 
-Run scene and control separately:
+Recommended one-command launch:
+
+```bash
+ros2 launch team_car_control actea_bringup.launch.py
+```
+
+For debugging, scene and control can also be run separately:
 
 ```bash
 ros2 launch team_car_description actea_scene.launch.py
@@ -125,17 +131,11 @@ ros2 launch team_car_description actea_scene.launch.py
 ros2 launch team_car_control actea_control.launch.py
 ```
 
-The default route is planned for simulation time 10.0 seconds, and the controller
+The default route is planned for simulation time 6.0 seconds, and the controller
 waits until that time before moving.
 If the scene has already been running past that time, regenerate the route with
 `python3 scripts/run_mbgazworld_planner_demo.py --start-time <future_sim_time>`
 and pass the resulting route via `route_file:=...`.
-
-The all-in-one launch is also available:
-
-```bash
-ros2 launch team_car_control actea_bringup.launch.py
-```
 
 The launch file first uses `outputs/gazebo_integration/mbgazworld_route.json`
 if it exists, then falls back to the packaged default route. To force a specific

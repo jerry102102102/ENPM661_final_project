@@ -67,7 +67,7 @@ planner_fn = build_controller_planning_function(imported.dynamic_obstacles, conf
 
 start = imported.transform_pose(Pose2D(0.35, 0.35, 0.0))
 goal = imported.transform_pose(Pose2D(3.65, 1.65, 0.0))
-route = planner_fn.plan(start, goal, start_time_s=10.0)
+route = planner_fn.plan(start, goal, start_time_s=6.0)
 ```
 
 The returned route contains:
@@ -101,7 +101,7 @@ The ROS2 package also includes a packaged default route:
 ros2_ws/src/team_car_control/routes/mbgazworld_route.json
 ```
 
-The default route is planned for simulation time `10.0s`.  The control node
+The default route is planned for simulation time `6.0s`.  The control node
 waits until Gazebo simulation time reaches the route's `planned_start_time_s`
 before moving, so periodic obstacle positions and ACTEA departure-time
 reasoning stay aligned.
@@ -164,7 +164,13 @@ colcon build --base-paths ros2_ws/src \
 source install/setup.zsh
 ```
 
-Run the scene and control separately:
+Recommended one-command launch:
+
+```bash
+ros2 launch team_car_control actea_bringup.launch.py
+```
+
+For debugging, the scene and control can also be run separately:
 
 ```bash
 ros2 launch team_car_description actea_scene.launch.py
@@ -172,12 +178,6 @@ ros2 launch team_car_description actea_scene.launch.py
 
 ```bash
 ros2 launch team_car_control actea_control.launch.py
-```
-
-An all-in-one launch is still available:
-
-```bash
-ros2 launch team_car_control actea_bringup.launch.py
 ```
 
 The route JSON contains planner-frame waypoints and Gazebo-frame waypoints.

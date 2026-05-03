@@ -8,7 +8,7 @@ from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -41,6 +41,7 @@ def generate_launch_description():
             DeclareLaunchArgument("lookahead_m", default_value="0.22"),
             DeclareLaunchArgument("goal_tolerance_m", default_value="0.16"),
             DeclareLaunchArgument("planned_start_time_s", default_value="-1.0"),
+            DeclareLaunchArgument("controller_start_delay_s", default_value="6.0"),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(gazebo_launch),
                 launch_arguments={
@@ -54,23 +55,29 @@ def generate_launch_description():
                     "yaw": LaunchConfiguration("yaw"),
                 }.items(),
             ),
-            Node(
-                package="team_car_control",
-                executable="actea_route_follower",
-                parameters=[
-                    {"use_sim_time": True},
-                    {"route_file": LaunchConfiguration("route_file")},
-                    {"world_name": LaunchConfiguration("world_name")},
-                    {"model_name": LaunchConfiguration("model_name")},
-                    {"pose_info_topic": ["/world/", LaunchConfiguration("world_name"), "/pose/info"]},
-                    {"drive_rpm": LaunchConfiguration("drive_rpm")},
-                    {"slow_drive_rpm": LaunchConfiguration("slow_drive_rpm")},
-                    {"lookahead_m": LaunchConfiguration("lookahead_m")},
-                    {"goal_tolerance_m": LaunchConfiguration("goal_tolerance_m")},
-                    {"planned_start_time_s": LaunchConfiguration("planned_start_time_s")},
-                    {"execution_log_path": LaunchConfiguration("execution_log_path")},
+            TimerAction(
+                period=LaunchConfiguration("controller_start_delay_s"),
+                actions=[
+                    Node(
+                        package="team_car_control",
+                        executable="actea_route_follower",
+                        parameters=[
+                            {"use_sim_time": True},
+                            {"route_file": LaunchConfiguration("route_file")},
+                            {"world_name": LaunchConfiguration("world_name")},
+                            {"model_name": LaunchConfiguration("model_name")},
+                            {"pose_info_topic": ["/world/", LaunchConfiguration("world_name"), "/pose/info"]},
+                            {"drive_rpm": LaunchConfiguration("drive_rpm")},
+                            {"slow_drive_rpm": LaunchConfiguration("slow_drive_rpm")},
+                            {"lookahead_m": LaunchConfiguration("lookahead_m")},
+                            {"goal_tolerance_m": LaunchConfiguration("goal_tolerance_m")},
+                            {"planned_start_time_s": LaunchConfiguration("planned_start_time_s")},
+                            {"start_time_late_tolerance_s": "2.0"},
+                            {"execution_log_path": LaunchConfiguration("execution_log_path")},
+                        ],
+                        output="screen",
+                    )
                 ],
-                output="screen",
             ),
         ]
     )

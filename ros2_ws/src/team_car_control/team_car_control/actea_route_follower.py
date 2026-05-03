@@ -199,6 +199,11 @@ class ActeaRouteFollower(Node):
                     f"{self.planned_start_time_s:.2f}s. Regenerate the route with "
                     "--start-time close to the intended controller start time for best temporal alignment."
                 )
+            elif abs(sim_time_s - self.planned_start_time_s) <= self.start_time_late_tolerance_s:
+                self.get_logger().info(
+                    f"Starting near planned departure time: sim={sim_time_s:.2f}s, "
+                    f"planned={self.planned_start_time_s:.2f}s."
+                )
             self.get_logger().info("Starting ACTEA closed-loop route execution.")
 
         if time.perf_counter() - self.start_wall > self.max_runtime_sec:

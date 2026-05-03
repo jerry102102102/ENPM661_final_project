@@ -116,7 +116,17 @@ colcon build --base-paths ros2_ws/src \
 source install/setup.zsh
 ```
 
-Run the scene and controller in separate terminals.
+Recommended one-command launch:
+
+```bash
+ros2 launch team_car_control actea_bringup.launch.py
+```
+
+This launches the scene, spawns the car, starts the periodic balls, and starts
+the route follower after a short delay so the controller starts near the route's
+planned departure time.
+
+If you want to debug pieces separately, use two terminals.
 
 Terminal 1, scene only:
 
@@ -130,19 +140,13 @@ Terminal 2, controller only:
 ros2 launch team_car_control actea_control.launch.py
 ```
 
-The packaged route is planned for `planned_start_time_s = 10.0`. The controller
+The packaged route is planned for `planned_start_time_s = 6.0`. The controller
 waits until Gazebo simulation time reaches that value before moving, so ACTEA's
 departure-time reasoning lines up with the periodic obstacles.
-If you start the controller after simulation time has already passed 10 seconds,
+If you start the controller after simulation time has already passed 6 seconds,
 regenerate a route for a future time, for example
 `python3 scripts/run_mbgazworld_planner_demo.py --start-time 25`, then pass that
 route with `route_file:=outputs/gazebo_integration/mbgazworld_route.json`.
-
-All-in-one launch is still available:
-
-```bash
-ros2 launch team_car_control actea_bringup.launch.py
-```
 
 Headless mode:
 

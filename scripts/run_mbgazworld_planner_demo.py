@@ -23,7 +23,7 @@ def main() -> None:
     parser.add_argument("--horizon", type=float, default=30.0)
     parser.add_argument("--xy-samples", type=int, default=360)
     parser.add_argument("--grid-spacing", type=float, default=0.25)
-    parser.add_argument("--start-time", type=float, default=10.0)
+    parser.add_argument("--start-time", type=float, default=6.0)
     parser.add_argument("--start", type=float, nargs=3, default=(0.35, 0.35, 0.0), metavar=("X", "Y", "THETA_RAD"))
     parser.add_argument("--goal", type=float, nargs=3, default=(3.65, 1.65, 0.0), metavar=("X", "Y", "THETA_RAD"))
     args = parser.parse_args()
