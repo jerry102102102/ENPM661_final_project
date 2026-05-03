@@ -92,8 +92,10 @@ The ROS2/Gazebo packages copied from the Group 4 Phase 2 stack live under:
 ros2_ws/src/
 ```
 
-The package includes a default ACTEA route for the imported `mbgazworld` map.
-To regenerate it after planner changes, run:
+The package includes a default ACTEA route for a small ACTEA demo world that
+matches the scale of the 2D GIF scene. The moving orange balls are periodic,
+slow, and start away from the car. To regenerate the route after planner
+changes, run:
 
 ```bash
 PYTHONPYCACHEPREFIX=/tmp/codex_pycache python3 scripts/run_mbgazworld_planner_demo.py
@@ -105,14 +107,40 @@ This writes a fresh route:
 outputs/gazebo_integration/mbgazworld_route.json
 ```
 
-Build and launch the Gazebo demo from the repository root:
+Build the ROS2 packages:
 
 ```bash
 source /opt/ros/humble/setup.zsh
 colcon build --base-paths ros2_ws/src \
   --packages-select team_car_description team_car_interfaces team_car_control
 source install/setup.zsh
+```
 
+Run the scene and controller in separate terminals.
+
+Terminal 1, scene only:
+
+```bash
+ros2 launch team_car_description actea_scene.launch.py
+```
+
+Terminal 2, controller only:
+
+```bash
+ros2 launch team_car_control actea_control.launch.py
+```
+
+The packaged route is planned for `planned_start_time_s = 10.0`. The controller
+waits until Gazebo simulation time reaches that value before moving, so ACTEA's
+departure-time reasoning lines up with the periodic obstacles.
+If you start the controller after simulation time has already passed 10 seconds,
+regenerate a route for a future time, for example
+`python3 scripts/run_mbgazworld_planner_demo.py --start-time 25`, then pass that
+route with `route_file:=outputs/gazebo_integration/mbgazworld_route.json`.
+
+All-in-one launch is still available:
+
+```bash
 ros2 launch team_car_control actea_bringup.launch.py
 ```
 

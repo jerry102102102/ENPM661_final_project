@@ -20,17 +20,27 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Import mbgazworld and run one ACTEA planning query.")
     parser.add_argument("--config", type=Path, default=Path("mbgazworld/world_config.json"))
     parser.add_argument("--output", type=Path, default=Path("outputs/gazebo_integration/mbgazworld_route.json"))
-    parser.add_argument("--horizon", type=float, default=20.0)
-    parser.add_argument("--xy-samples", type=int, default=240)
+    parser.add_argument("--horizon", type=float, default=30.0)
+    parser.add_argument("--xy-samples", type=int, default=360)
+    parser.add_argument("--grid-spacing", type=float, default=0.25)
+    parser.add_argument("--start-time", type=float, default=10.0)
+    parser.add_argument("--start", type=float, nargs=3, default=(0.35, 0.35, 0.0), metavar=("X", "Y", "THETA_RAD"))
+    parser.add_argument("--goal", type=float, nargs=3, default=(3.65, 1.65, 0.0), metavar=("X", "Y", "THETA_RAD"))
     args = parser.parse_args()
 
-    imported = import_gazebo_world_config(args.config, annotation_horizon_s=args.horizon)
-    config = method_run_config_from_gazebo_import(imported, xy_sample_count=args.xy_samples)
+    imported = import_gazebo_world_config(args.config, annotation_horizon_s=args.horizon, margin_m=0.35)
+    config = method_run_config_from_gazebo_import(
+        imported,
+        xy_sample_count=args.xy_samples,
+        grid_spacing_m=args.grid_spacing,
+    )
     planning_function = build_controller_planning_function(imported.dynamic_obstacles, config, mode="actea")
 
-    start = imported.transform_pose(Pose2D(-4.0, 0.0, 0.0))
-    goal = imported.transform_pose(Pose2D(4.0, 0.0, 0.0))
-    route = planning_function.plan(start, goal)
+    start_gazebo = Pose2D(*args.start)
+    goal_gazebo = Pose2D(*args.goal)
+    start = imported.transform_pose(start_gazebo)
+    goal = imported.transform_pose(goal_gazebo)
+    route = planning_function.plan(start, goal, start_time_s=args.start_time)
     gazebo_waypoints = [imported.inverse_transform_pose(pose) for pose in route.waypoints]
     gazebo_timed_waypoints = [
         {
@@ -49,6 +59,9 @@ def main() -> None:
                 "world_name": imported.world_name,
                 "success": route.success,
                 "message": route.message,
+                "planned_start_time_s": args.start_time,
+                "start_pose_gazebo": {"x": start_gazebo.x, "y": start_gazebo.y, "theta": start_gazebo.theta},
+                "goal_pose_gazebo": {"x": goal_gazebo.x, "y": goal_gazebo.y, "theta": goal_gazebo.theta},
                 "build_time_s": planning_function.build_time_s,
                 "annotation_time_s": planning_function.annotation_time_s,
                 "traversal_time_s": route.traversal_time_s,

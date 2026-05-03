@@ -17,8 +17,8 @@ class GazeboWorldImportTests(unittest.TestCase):
         )
 
         self.assertEqual(imported.world_name, "competition_environment")
-        self.assertEqual(len(imported.static_world.obstacles), 4)
-        self.assertGreaterEqual(len(imported.dynamic_obstacles), 10)
+        self.assertEqual(len(imported.static_world.obstacles), 3)
+        self.assertGreaterEqual(len(imported.dynamic_obstacles), 8)
         self.assertTrue(all(obstacle.active_start_time_s is not None for obstacle in imported.dynamic_obstacles))
         self.assertTrue(all(obstacle.active_end_time_s is not None for obstacle in imported.dynamic_obstacles))
         self.assertEqual(imported.static_world.bounds[0], 0.0)
@@ -38,4 +38,3 @@ class GazeboWorldImportTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -99,21 +99,41 @@ the robot reaching the goal in a 5-second animation.
 
 ## Gazebo Demo
 
-The ROS2 package includes a default route. To regenerate an ACTEA route on the
-imported Gazebo map:
+The ROS2 package includes a default route for the small ACTEA demo world. To
+regenerate that route:
 
 ```bash
 python3 scripts/run_mbgazworld_planner_demo.py
 ```
 
-To execute that route with the team-car Gazebo model and closed-loop route
-follower from the repository root:
+Build the ROS2 packages:
 
 ```bash
 source /opt/ros/humble/setup.zsh
 colcon build --base-paths ros2_ws/src \
   --packages-select team_car_description team_car_interfaces team_car_control
 source install/setup.zsh
+```
+
+Run scene and control separately:
+
+```bash
+ros2 launch team_car_description actea_scene.launch.py
+```
+
+```bash
+ros2 launch team_car_control actea_control.launch.py
+```
+
+The default route is planned for simulation time 10.0 seconds, and the controller
+waits until that time before moving.
+If the scene has already been running past that time, regenerate the route with
+`python3 scripts/run_mbgazworld_planner_demo.py --start-time <future_sim_time>`
+and pass the resulting route via `route_file:=...`.
+
+The all-in-one launch is also available:
+
+```bash
 ros2 launch team_car_control actea_bringup.launch.py
 ```
 

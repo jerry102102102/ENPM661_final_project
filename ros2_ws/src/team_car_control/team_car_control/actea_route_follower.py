@@ -60,6 +60,8 @@ class ActeaRouteFollower(Node):
         self.declare_parameter("rear_drive_sign_left", -1.0)
         self.declare_parameter("rear_drive_sign_right", 1.0)
         self.declare_parameter("auto_start", True)
+        self.declare_parameter("planned_start_time_s", -1.0)
+        self.declare_parameter("start_time_late_tolerance_s", 0.75)
         self.declare_parameter("execution_log_path", "outputs/gazebo_integration/actea_gazebo_execution_{stamp}.csv")
 
         self.route_file = Path(str(self.get_parameter("route_file").value)).expanduser()
@@ -80,15 +82,24 @@ class ActeaRouteFollower(Node):
         self.rear_drive_sign_left = float(self.get_parameter("rear_drive_sign_left").value)
         self.rear_drive_sign_right = float(self.get_parameter("rear_drive_sign_right").value)
         self.auto_start = bool(self.get_parameter("auto_start").value)
+        self.start_time_late_tolerance_s = float(self.get_parameter("start_time_late_tolerance_s").value)
         self.execution_log_path_template = str(self.get_parameter("execution_log_path").value)
 
-        self.route = self._load_route(self.route_file)
+        self.route_payload = self._load_route_payload(self.route_file)
+        self.route = self._route_from_payload(self.route_payload, self.route_file)
+        requested_start_time = float(self.get_parameter("planned_start_time_s").value)
+        self.planned_start_time_s = (
+            requested_start_time
+            if requested_start_time >= 0.0
+            else float(self.route_payload.get("planned_start_time_s", 0.0))
+        )
         self.goal_pose = self.route[-1]
         self.nearest_index = 0
         self.started = False
         self.done = False
         self.start_wall = time.perf_counter()
         self.last_progress_wall = self.start_wall
+        self.last_wait_log_wall = 0.0
         self.best_goal_distance = math.inf
         self.execution_log_path = self._initialize_execution_log()
 
@@ -121,12 +132,15 @@ class ActeaRouteFollower(Node):
         self.timer = self.create_timer(self.control_period_sec, self._control_tick)
         self.get_logger().info(
             f"ACTEA route follower loaded {len(self.route)} waypoints from {self.route_file}; "
-            f"pose_info_topic={self.pose_info_topic}, auto_start={self.auto_start}"
+            f"pose_info_topic={self.pose_info_topic}, auto_start={self.auto_start}, "
+            f"planned_start_time_s={self.planned_start_time_s:.2f}"
         )
 
-    def _load_route(self, path: Path) -> list[RoutePose]:
+    def _load_route_payload(self, path: Path) -> dict:
         with path.open("r", encoding="utf-8") as handle:
-            payload = json.load(handle)
+            return json.load(handle)
+
+    def _route_from_payload(self, payload: dict, path: Path) -> list[RoutePose]:
         if not payload.get("success", False):
             raise RuntimeError(f"Route file does not contain a successful plan: {payload.get('message')}")
         rows = payload.get("gazebo_waypoints") or payload.get("waypoints") or []
@@ -161,6 +175,16 @@ class ActeaRouteFollower(Node):
     def _control_tick(self) -> None:
         if self.done or not self.auto_start:
             return
+        sim_time_s = self._sim_time_s()
+        if sim_time_s < self.planned_start_time_s:
+            self.planned_path_pub.publish(self._path_msg(self.route))
+            if not self.started and time.perf_counter() - self.last_wait_log_wall >= 1.0:
+                self.last_wait_log_wall = time.perf_counter()
+                self.get_logger().info(
+                    f"Waiting for planned_start_time_s={self.planned_start_time_s:.2f}; "
+                    f"current sim time={sim_time_s:.2f}"
+                )
+            return
         actual_pose = self._latest_model_pose()
         if actual_pose is None:
             self.planned_path_pub.publish(self._path_msg(self.route))
@@ -169,6 +193,12 @@ class ActeaRouteFollower(Node):
             self.started = True
             self.start_wall = time.perf_counter()
             self.last_progress_wall = self.start_wall
+            if sim_time_s > self.planned_start_time_s + self.start_time_late_tolerance_s:
+                self.get_logger().warn(
+                    f"Starting at sim time {sim_time_s:.2f}s, but route was planned for "
+                    f"{self.planned_start_time_s:.2f}s. Regenerate the route with "
+                    "--start-time close to the intended controller start time for best temporal alignment."
+                )
             self.get_logger().info("Starting ACTEA closed-loop route execution.")
 
         if time.perf_counter() - self.start_wall > self.max_runtime_sec:
@@ -205,6 +235,7 @@ class ActeaRouteFollower(Node):
         self._append_execution_log_row(
             {
                 "wall_time_sec": time.time(),
+                "sim_time_sec": sim_time_s,
                 "status": "tracking",
                 "actual_x": actual_pose.x,
                 "actual_y": actual_pose.y,
@@ -229,6 +260,7 @@ class ActeaRouteFollower(Node):
         self._append_execution_log_row(
             {
                 "wall_time_sec": time.time(),
+                "sim_time_sec": self._sim_time_s(),
                 "status": status,
                 "actual_x": pose.x,
                 "actual_y": pose.y,
@@ -250,6 +282,9 @@ class ActeaRouteFollower(Node):
     def _latest_model_pose(self) -> RoutePose | None:
         with self._pose_lock:
             return self._latest_pose
+
+    def _sim_time_s(self) -> float:
+        return self.get_clock().now().nanoseconds / 1_000_000_000.0
 
     @staticmethod
     def _find_nearest_path_index(path: list[RoutePose], pose: RoutePose, start_index: int) -> int:
@@ -311,6 +346,7 @@ class ActeaRouteFollower(Node):
     def _execution_log_fields() -> list[str]:
         return [
             "wall_time_sec",
+            "sim_time_sec",
             "status",
             "actual_x",
             "actual_y",
@@ -382,4 +418,3 @@ def main() -> None:
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
-

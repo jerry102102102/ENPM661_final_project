@@ -10,12 +10,13 @@ def generate_world(json_file, output_file):
         return
 
     # XML Header and Environment Setup
-    world_content = """<?xml version="1.0" ?>
+    world_name = data.get("world_name", "competition_environment")
+    world_content = f"""<?xml version="1.0" ?>
 <sdf version="1.6">
-  <world name="default">
+  <world name="{world_name}">
     <light name="sun" type="directional">
       <cast_shadows>true</cast_shadows>
-      <pose>0 0 10 0 0 0</pose>
+      <pose>0 0 5 0 0 0</pose>
       <diffuse>0.8 0.8 0.8 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
       <direction>-0.5 0.1 -0.9</direction>
@@ -24,13 +25,13 @@ def generate_world(json_file, output_file):
       <static>true</static>
       <link name="link">
         <collision name="collision">
-          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <geometry><plane><normal>0 0 1</normal><size>5 3</size></plane></geometry>
         </collision>
         <visual name="visual">
-          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <geometry><plane><normal>0 0 1</normal><size>5 3</size></plane></geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <ambient>0.86 0.88 0.90 1</ambient>
+            <diffuse>0.86 0.88 0.90 1</diffuse>
           </material>
         </visual>
       </link>
@@ -38,7 +39,7 @@ def generate_world(json_file, output_file):
     
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>15.0 -15.0 10.0 0 0.5 2.3</pose>
+        <pose>2.0 -3.8 4.0 0 0.75 1.57</pose>
       </camera>
     </gui>
 """
@@ -99,7 +100,11 @@ def generate_world(json_file, output_file):
 
     with open(output_file, 'w') as f:
         f.write(world_content)
-    print(f"Success! Generated '{output_file}' with 4 walls and 2 moving orange balls.")
+    print(
+        f"Success! Generated '{output_file}' with "
+        f"{len(data.get('static_entities', []))} static boxes and "
+        f"{len(data.get('dynamic_entities', []))} moving orange balls."
+    )
 
 if __name__ == "__main__":
     generate_world('world_config.json', 'output.world')

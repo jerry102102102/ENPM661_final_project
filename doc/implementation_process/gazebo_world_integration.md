@@ -1,7 +1,7 @@
 # Gazebo World Integration Notes
 
-This note documents the current integration path for importing the classmate
-Gazebo map into the ACTEA planner.
+This note documents the current integration path for running the ACTEA planner
+with a small Gazebo team-car scene.
 
 ## Imported Files
 
@@ -11,9 +11,11 @@ The local map folder is:
 - `mbgazworld/json_to_world.py`
 - `mbgazworld/output.world`
 
-The JSON describes static box walls and looping orange-ball actors.  The SDF
-world is useful for Gazebo visualization, while the JSON is the planner-facing
-source of truth.
+The JSON now describes a small ACTEA demo scene, not the original classmate
+map.  Its scale is close to the 2D GIF demo: a team car starts near
+`(0.35, 0.35)`, static boxes form a small gate, and periodic orange balls move
+slowly through the route.  The SDF world is useful for Gazebo visualization,
+while the JSON is the planner-facing source of truth.
 
 ## Dynamic Obstacle Compatibility
 
@@ -59,13 +61,13 @@ from src.integrations.gazebo_world import import_gazebo_world_config, method_run
 from src.integrations.planner_api import build_controller_planning_function
 from src.models.state import Pose2D
 
-imported = import_gazebo_world_config("mbgazworld/world_config.json", annotation_horizon_s=20.0)
+imported = import_gazebo_world_config("mbgazworld/world_config.json", annotation_horizon_s=30.0)
 config = method_run_config_from_gazebo_import(imported)
 planner_fn = build_controller_planning_function(imported.dynamic_obstacles, config, mode="actea")
 
-start = imported.transform_pose(Pose2D(-4.25, -3.75, 0.0))
-goal = imported.transform_pose(Pose2D(4.25, 3.25, 0.0))
-route = planner_fn.plan(start, goal)
+start = imported.transform_pose(Pose2D(0.35, 0.35, 0.0))
+goal = imported.transform_pose(Pose2D(3.65, 1.65, 0.0))
+route = planner_fn.plan(start, goal, start_time_s=10.0)
 ```
 
 The returned route contains:
@@ -99,10 +101,18 @@ The ROS2 package also includes a packaged default route:
 ros2_ws/src/team_car_control/routes/mbgazworld_route.json
 ```
 
-`actea_bringup.launch.py` uses the regenerated output route when it exists and
-otherwise falls back to this packaged route.  This lets a fresh clone launch the
-Gazebo demo after a ROS2 build, while still allowing planner changes to produce
-a new route.
+The default route is planned for simulation time `10.0s`.  The control node
+waits until Gazebo simulation time reaches the route's `planned_start_time_s`
+before moving, so periodic obstacle positions and ACTEA departure-time
+reasoning stay aligned.
+If the scene has already been running longer than that, regenerate the route
+with a future `--start-time` and pass the generated JSON through
+`route_file:=...`.
+
+`actea_control.launch.py` and `actea_bringup.launch.py` use the regenerated
+output route when it exists and otherwise fall back to this packaged route.
+This lets a fresh clone launch the Gazebo demo after a ROS2 build, while still
+allowing planner changes to produce a new route.
 
 ## External Repo Import
 
@@ -134,26 +144,40 @@ ros2_ws/src/team_car_control/
 `team_car_description` provides the vehicle URDF, STL meshes, ros2_control
 configuration, and the `mbgazworld_actea.sdf` world.  `team_car_control` now
 includes `actea_route_follower`, a closed-loop pure-pursuit route follower that
-reads `outputs/gazebo_integration/mbgazworld_route.json` and sends steering and
-rear-wheel velocity commands to the team-car Gazebo controllers.
+reads an ACTEA route JSON and sends steering and rear-wheel velocity commands
+to the team-car Gazebo controllers.
 
 ## ROS2/Gazebo Run Path
 
-Generate the ACTEA route first:
+Generate the ACTEA route:
 
 ```bash
 PYTHONPYCACHEPREFIX=/tmp/codex_pycache python3 scripts/run_mbgazworld_planner_demo.py
 ```
 
-Then build and launch the ROS2 workspace:
+Then build the ROS2 workspace:
 
 ```bash
 source /opt/ros/humble/setup.zsh
 colcon build --base-paths ros2_ws/src \
   --packages-select team_car_description team_car_interfaces team_car_control
 source install/setup.zsh
+```
 
-ACTEA_PROJECT_ROOT=$PWD ros2 launch team_car_control actea_bringup.launch.py
+Run the scene and control separately:
+
+```bash
+ros2 launch team_car_description actea_scene.launch.py
+```
+
+```bash
+ros2 launch team_car_control actea_control.launch.py
+```
+
+An all-in-one launch is still available:
+
+```bash
+ros2 launch team_car_control actea_bringup.launch.py
 ```
 
 The route JSON contains planner-frame waypoints and Gazebo-frame waypoints.

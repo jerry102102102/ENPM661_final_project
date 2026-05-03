@@ -2,49 +2,63 @@
   "world_name": "competition_environment",
   "static_entities": [
     {
-      "name": "wall_north",
-      "position": {"x": 5.0, "y": 0.0, "z": 1.0},
-      "scale": {"length": 0.2, "width": 4.0, "height": 2.0},
+      "name": "lower_gate_block",
+      "position": {"x": 2.0, "y": 0.35, "z": 0.15},
+      "scale": {"length": 0.16, "width": 0.7, "height": 0.3},
       "rotation": 0
     },
     {
-      "name": "wall_south",
-      "position": {"x": -5.0, "y": 0.0, "z": 1.0},
-      "scale": {"length": 0.2, "width": 6.0, "height": 2.0},
+      "name": "upper_gate_block",
+      "position": {"x": 2.0, "y": 1.65, "z": 0.15},
+      "scale": {"length": 0.16, "width": 0.7, "height": 0.3},
       "rotation": 0
     },
     {
-      "name": "wall_west",
-      "position": {"x": 0.0, "y": 5.0, "z": 1.0},
-      "scale": {"length": 5.0, "width": 0.2, "height": 2.0},
+      "name": "upper_lane_barrier",
+      "position": {"x": 3.05, "y": 1.15, "z": 0.15},
+      "scale": {"length": 0.75, "width": 0.12, "height": 0.3},
       "rotation": 0
-    },
-    {
-      "name": "wall_diagonal",
-      "position": {"x": 2.0, "y": -2.0, "z": 1.0},
-      "scale": {"length": 3.0, "width": 0.2, "height": 2.0},
-      "rotation": 45
     }
   ],
   "dynamic_entities": [
     {
-      "name": "orange_ball_1",
-      "radius": 0.5,
-      "start_position": {"x": -2.0, "y": 2.0, "z": 0.5},
+      "name": "orange_ball_cross_left",
+      "radius": 0.13,
+      "start_position": {"x": 1.15, "y": -0.25, "z": 0.13},
       "waypoints": [
-        {"time": 0, "pos": {"x": -2.0, "y": 2.0, "z": 0.5}},
-        {"time": 3, "pos": {"x": 2.0, "y": 2.0, "z": 0.5}},
-        {"time": 6, "pos": {"x": -2.0, "y": 2.0, "z": 0.5}}
+        {"time": 0, "pos": {"x": 1.15, "y": -0.25, "z": 0.13}},
+        {"time": 9, "pos": {"x": 1.15, "y": 2.25, "z": 0.13}},
+        {"time": 18, "pos": {"x": 1.15, "y": -0.25, "z": 0.13}}
       ]
     },
     {
-      "name": "orange_ball_2",
-      "radius": 0.5,
-      "start_position": {"x": -2.0, "y": -2.0, "z": 0.5},
+      "name": "orange_ball_cross_mid",
+      "radius": 0.13,
+      "start_position": {"x": 2.35, "y": 2.25, "z": 0.13},
       "waypoints": [
-        {"time": 0, "pos": {"x": -2.0, "y": -2.0, "z": 0.5}},
-        {"time": 4, "pos": {"x": -2.0, "y": 2.0, "z": 0.5}},
-        {"time": 8, "pos": {"x": -2.0, "y": -2.0, "z": 0.5}}
+        {"time": 0, "pos": {"x": 2.35, "y": 2.25, "z": 0.13}},
+        {"time": 10, "pos": {"x": 2.35, "y": -0.25, "z": 0.13}},
+        {"time": 20, "pos": {"x": 2.35, "y": 2.25, "z": 0.13}}
+      ]
+    },
+    {
+      "name": "orange_ball_cross_right",
+      "radius": 0.13,
+      "start_position": {"x": 3.15, "y": -0.25, "z": 0.13},
+      "waypoints": [
+        {"time": 0, "pos": {"x": 3.15, "y": -0.25, "z": 0.13}},
+        {"time": 11, "pos": {"x": 3.15, "y": 2.25, "z": 0.13}},
+        {"time": 22, "pos": {"x": 3.15, "y": -0.25, "z": 0.13}}
+      ]
+    },
+    {
+      "name": "orange_ball_horizontal",
+      "radius": 0.12,
+      "start_position": {"x": -0.25, "y": 1.0, "z": 0.12},
+      "waypoints": [
+        {"time": 0, "pos": {"x": -0.25, "y": 1.0, "z": 0.12}},
+        {"time": 14, "pos": {"x": 4.25, "y": 1.0, "z": 0.12}},
+        {"time": 28, "pos": {"x": -0.25, "y": 1.0, "z": 0.12}}
       ]
     }
   ]

@@ -3,7 +3,7 @@
   <world name="competition_environment">
     <light name="sun" type="directional">
       <cast_shadows>true</cast_shadows>
-      <pose>0 0 10 0 0 0</pose>
+      <pose>0 0 5 0 0 0</pose>
       <diffuse>0.8 0.8 0.8 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
       <direction>-0.5 0.1 -0.9</direction>
@@ -12,13 +12,13 @@
       <static>true</static>
       <link name="link">
         <collision name="collision">
-          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <geometry><plane><normal>0 0 1</normal><size>5 3</size></plane></geometry>
         </collision>
         <visual name="visual">
-          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <geometry><plane><normal>0 0 1</normal><size>5 3</size></plane></geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <ambient>0.86 0.88 0.90 1</ambient>
+            <diffuse>0.86 0.88 0.90 1</diffuse>
           </material>
         </visual>
       </link>
@@ -26,19 +26,19 @@
     
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>15.0 -15.0 10.0 0 0.5 2.3</pose>
+        <pose>2.0 -3.8 4.0 0 0.75 1.57</pose>
       </camera>
     </gui>
 
-    <model name='wall_north'>
+    <model name='lower_gate_block'>
       <static>1</static>
-      <pose>5.0 0.0 1.0 0 0 0.0</pose>
+      <pose>2.0 0.35 0.15 0 0 0.0</pose>
       <link name='link'>
         <collision name='collision'>
-          <geometry><box><size>0.2 4.0 2.0</size></box></geometry>
+          <geometry><box><size>0.16 0.7 0.3</size></box></geometry>
         </collision>
         <visual name='visual'>
-          <geometry><box><size>0.2 4.0 2.0</size></box></geometry>
+          <geometry><box><size>0.16 0.7 0.3</size></box></geometry>
           <material>
             <ambient>0.7 0.7 0.7 1</ambient>
             <diffuse>0.7 0.7 0.7 1</diffuse>
@@ -46,15 +46,15 @@
         </visual>
       </link>
     </model>
-    <model name='wall_south'>
+    <model name='upper_gate_block'>
       <static>1</static>
-      <pose>-5.0 0.0 1.0 0 0 0.0</pose>
+      <pose>2.0 1.65 0.15 0 0 0.0</pose>
       <link name='link'>
         <collision name='collision'>
-          <geometry><box><size>0.2 6.0 2.0</size></box></geometry>
+          <geometry><box><size>0.16 0.7 0.3</size></box></geometry>
         </collision>
         <visual name='visual'>
-          <geometry><box><size>0.2 6.0 2.0</size></box></geometry>
+          <geometry><box><size>0.16 0.7 0.3</size></box></geometry>
           <material>
             <ambient>0.7 0.7 0.7 1</ambient>
             <diffuse>0.7 0.7 0.7 1</diffuse>
@@ -62,15 +62,15 @@
         </visual>
       </link>
     </model>
-    <model name='wall_west'>
+    <model name='upper_lane_barrier'>
       <static>1</static>
-      <pose>0.0 5.0 1.0 0 0 0.0</pose>
+      <pose>3.05 1.15 0.15 0 0 0.0</pose>
       <link name='link'>
         <collision name='collision'>
-          <geometry><box><size>5.0 0.2 2.0</size></box></geometry>
+          <geometry><box><size>0.75 0.12 0.3</size></box></geometry>
         </collision>
         <visual name='visual'>
-          <geometry><box><size>5.0 0.2 2.0</size></box></geometry>
+          <geometry><box><size>0.75 0.12 0.3</size></box></geometry>
           <material>
             <ambient>0.7 0.7 0.7 1</ambient>
             <diffuse>0.7 0.7 0.7 1</diffuse>
@@ -78,27 +78,11 @@
         </visual>
       </link>
     </model>
-    <model name='wall_diagonal'>
-      <static>1</static>
-      <pose>2.0 -2.0 1.0 0 0 0.7853981633974483</pose>
-      <link name='link'>
-        <collision name='collision'>
-          <geometry><box><size>3.0 0.2 2.0</size></box></geometry>
-        </collision>
-        <visual name='visual'>
-          <geometry><box><size>3.0 0.2 2.0</size></box></geometry>
-          <material>
-            <ambient>0.7 0.7 0.7 1</ambient>
-            <diffuse>0.7 0.7 0.7 1</diffuse>
-          </material>
-        </visual>
-      </link>
-    </model>
-    <actor name='orange_ball_1'>
-      <pose>-2.0 2.0 0.5 0 0 0</pose>
+    <actor name='orange_ball_cross_left'>
+      <pose>1.15 -0.25 0.13 0 0 0</pose>
       <link name='link'>
         <visual name='visual'>
-          <geometry><sphere><radius>0.5</radius></sphere></geometry>
+          <geometry><sphere><radius>0.13</radius></sphere></geometry>
           <material>
             <ambient>1 0.65 0 1</ambient> <!-- Orange RGBA -->
             <diffuse>1 0.65 0 1</diffuse>
@@ -111,24 +95,24 @@
         <trajectory id="0" type="linear">
           <waypoint>
             <time>0</time>
-            <pose>-2.0 2.0 0.5 0 0 0</pose>
+            <pose>1.15 -0.25 0.13 0 0 0</pose>
           </waypoint>
           <waypoint>
-            <time>3</time>
-            <pose>2.0 2.0 0.5 0 0 0</pose>
+            <time>9</time>
+            <pose>1.15 2.25 0.13 0 0 0</pose>
           </waypoint>
           <waypoint>
-            <time>6</time>
-            <pose>-2.0 2.0 0.5 0 0 0</pose>
+            <time>18</time>
+            <pose>1.15 -0.25 0.13 0 0 0</pose>
           </waypoint>
         </trajectory>
       </script>
     </actor>
-    <actor name='orange_ball_2'>
-      <pose>-2.0 -2.0 0.5 0 0 0</pose>
+    <actor name='orange_ball_cross_mid'>
+      <pose>2.35 2.25 0.13 0 0 0</pose>
       <link name='link'>
         <visual name='visual'>
-          <geometry><sphere><radius>0.5</radius></sphere></geometry>
+          <geometry><sphere><radius>0.13</radius></sphere></geometry>
           <material>
             <ambient>1 0.65 0 1</ambient> <!-- Orange RGBA -->
             <diffuse>1 0.65 0 1</diffuse>
@@ -141,15 +125,75 @@
         <trajectory id="0" type="linear">
           <waypoint>
             <time>0</time>
-            <pose>-2.0 -2.0 0.5 0 0 0</pose>
+            <pose>2.35 2.25 0.13 0 0 0</pose>
           </waypoint>
           <waypoint>
-            <time>4</time>
-            <pose>-2.0 2.0 0.5 0 0 0</pose>
+            <time>10</time>
+            <pose>2.35 -0.25 0.13 0 0 0</pose>
           </waypoint>
           <waypoint>
-            <time>8</time>
-            <pose>-2.0 -2.0 0.5 0 0 0</pose>
+            <time>20</time>
+            <pose>2.35 2.25 0.13 0 0 0</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
+    <actor name='orange_ball_cross_right'>
+      <pose>3.15 -0.25 0.13 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><sphere><radius>0.13</radius></sphere></geometry>
+          <material>
+            <ambient>1 0.65 0 1</ambient> <!-- Orange RGBA -->
+            <diffuse>1 0.65 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="linear">
+          <waypoint>
+            <time>0</time>
+            <pose>3.15 -0.25 0.13 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>11</time>
+            <pose>3.15 2.25 0.13 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>22</time>
+            <pose>3.15 -0.25 0.13 0 0 0</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
+    <actor name='orange_ball_horizontal'>
+      <pose>-0.25 1.0 0.12 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><sphere><radius>0.12</radius></sphere></geometry>
+          <material>
+            <ambient>1 0.65 0 1</ambient> <!-- Orange RGBA -->
+            <diffuse>1 0.65 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="linear">
+          <waypoint>
+            <time>0</time>
+            <pose>-0.25 1.0 0.12 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>14</time>
+            <pose>4.25 1.0 0.12 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>28</time>
+            <pose>-0.25 1.0 0.12 0 0 0</pose>
           </waypoint>
         </trajectory>
       </script>

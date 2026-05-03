@@ -13,7 +13,12 @@ setup(
         (f"share/{package_name}", ["package.xml"]),
         (
             f"share/{package_name}/launch",
-            ["launch/control.launch.py", "launch/bringup.launch.py", "launch/actea_bringup.launch.py"],
+            [
+                "launch/control.launch.py",
+                "launch/bringup.launch.py",
+                "launch/actea_bringup.launch.py",
+                "launch/actea_control.launch.py",
+            ],
         ),
         (f"share/{package_name}/routes", ["routes/mbgazworld_route.json"]),
     ],
